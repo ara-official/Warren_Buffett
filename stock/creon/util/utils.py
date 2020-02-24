@@ -22,7 +22,7 @@ class Utils:
         '누적체결매도수량': 10
     }
 
-    def get_trade_price(self, aim_pr):
+    def get_trade_price(self, aim_pr, 호가=0):
         price_gap = 0
         if aim_pr < 1000:
             price_gap = 1
@@ -39,9 +39,9 @@ class Utils:
         elif aim_pr >= 500000:
             price_gap = 1000
         if aim_pr % price_gap == 0:
-            return aim_pr
+            return aim_pr + 호가 * price_gap
         else:
-            ret = aim_pr - aim_pr % price_gap + price_gap
+            ret = aim_pr - aim_pr % price_gap + price_gap*(호가+1)
 
             return ret
 
