@@ -37,7 +37,9 @@ class CpEvent:
                 '신용대출구분코드':15,
                 # 이하 생략
             }
-            
+            __종목명 = self.client.GetHeaderValue(GetHeaderValue_param['종목명'])
+            __매매구분 = self.client.GetHeaderValue(GetHeaderValue_param['매매구분코드'])
+            __체결 = self.client.GetHeaderValue(GetHeaderValue_param['체결구분코드'])
             print(
                 '계좌명:', self.client.GetHeaderValue(GetHeaderValue_param['계좌명']),
                 '종목명:', self.client.GetHeaderValue(GetHeaderValue_param['종목명']),
@@ -53,6 +55,13 @@ class CpEvent:
             )
 
             self.caller.complete = True # 체결
+            if (__매매구분 == 1) & (__체결 == 1): # 매도 성공
+                self.caller.sellCount+=1
+                print('[매도 성공] 종목명: %s, (count: %s)' % (__종목명, self.caller.sellCount))
+            if (__매매구분 == 2) & (__체결 == 1): # 매수 성공
+                self.caller.buyCount+=1
+                print('[매수 성공] 종목명: %s, (count: %s)' % (__종목명, self.caller.buyCount))
+
 
 class CpPublish:
     def __init__(self, name, service_id):
@@ -62,6 +71,8 @@ class CpPublish:
         self.bIsSubscribe = False
         self.local_value = 0
         self.complete = False
+        self.sellCount = 0
+        self.buyCount = 0
 
     def subscribe(self, var, caller):
         if self.bIsSubscribe == True:
@@ -92,6 +103,12 @@ class CpPublish:
     def get_conclusion(self):
         return self.complete
 
+    def get_buy_count(self):
+        return self.buyCount
+
+    def get_sell_count(self):
+        return self.sellCount
+
 class CpPBStockCur(CpPublish):
     def __init__(self):
         super().__init__('stockcur', 'DsCbo1.StockCur')
@@ -105,3 +122,9 @@ class CpPBConclusion(CpPublish):
         
     def getConclusion(self):
         return super().get_conclusion()
+
+    def get_buy_count(self):
+        return super().get_buy_count()
+
+    def get_sell_count(self):
+        return super().get_sell_count()

@@ -234,7 +234,7 @@ class Trading:
         ret = self.instCpTd0314.BlockRequest()
         print('ret : %s' % (ret))
 
-        print("[CpRPOrder/BlockRequestCancel] 주문결과", self.instCpTd0314.GetDibStatus(), self.instCpTd0314.GetDibMsg1())
+        print("[주식_주문_취소] 주문결과", self.instCpTd0314.GetDibStatus(), self.instCpTd0314.GetDibMsg1())
         if self.instCpTd0314.GetDibStatus() != 0:
             return False
         return True
