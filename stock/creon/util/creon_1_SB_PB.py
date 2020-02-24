@@ -43,6 +43,13 @@ class CpEvent:
                 '종목명:', self.client.GetHeaderValue(GetHeaderValue_param['종목명']),
                 '체결수량:', self.client.GetHeaderValue(GetHeaderValue_param['체결수량']),
                 '체결가격:', self.client.GetHeaderValue(GetHeaderValue_param['체결가격']),
+                '주문번호:', self.client.GetHeaderValue(GetHeaderValue_param['주문번호']),
+                '계좌번호:', self.client.GetHeaderValue(GetHeaderValue_param['계좌번호']),
+                '상품관리구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['상품관리구분코드']),
+                '종목코드:', self.client.GetHeaderValue(GetHeaderValue_param['종목코드']),
+                '매매구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['매매구분코드']),
+                '체결구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['체결구분코드']),
+                '신용대출구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['신용대출구분코드']),
             )
 
             self.caller.complete = True # 체결
