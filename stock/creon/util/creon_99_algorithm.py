@@ -120,6 +120,7 @@ class Algorithm:
         'APS홀딩스'
     )
 
+    #TODO: JSON 치환.
     매수_목록_0220 = (
         '파인테크닉스',
         '이더블유케이',
@@ -176,6 +177,7 @@ class Algorithm:
             주식_잔고_리스트 = stTrading.주식_잔고_조회()
 
             for item in 주식_잔고_리스트:
+                #TODO:print문 LOG로 대체.(ex, 시간, 부른 함수, 내용)
                 print(
                     '[종목명:', item['종목명'], ']',
                 )
@@ -234,14 +236,11 @@ class Algorithm:
             고가 = utils.Utils.InputValue_StockChart_Field_type['고가']
             종가 = utils.Utils.InputValue_StockChart_Field_type['종가']
 
-            # comparison_period=500
-            # comparison_period=100
-            # __기대_조건성립률=93
-            __기대_조건성립률=80
-            # __기대_주가_대비_수익률=1.5
+
+            #TODO:기대수익률 JSON으로 변경
             기대수익률=5
             if bPrint == True:
-                print('__기대_조건성립률:', __기대_조건성립률, '기대수익률:', 기대수익률)
+                print('기대수익률:', 기대수익률)
             result_list = []
             for j in range(len(stock_code_list)):
                 item = {}
@@ -262,6 +261,8 @@ class Algorithm:
             ###########################################
             ## 비교기간만 바꿔봤을 때, 수익
             # CREON API response time 때문에, 우선 "삼륭물삼 ~ 에이치엘비생명과학" 만 비교
+            
+            #TODO:__비교기간 값 JSON으로 넘겨주기
             # __비교기간 = 1 # 3754
             __비교기간 = 2 # 5093 # BEST
             # __비교기간 = 3 # 4410
@@ -276,6 +277,8 @@ class Algorithm:
 #######################################################
 # Simulator
 #######################################################
+
+            #TODO:전체기간 값 JSON으로 넘겨주기
             __전체기간 = 전체기간 # 2주
             __전체수익 = 0
             __종목별_매매_수량 = 1 # top 5 각 1 주씩 매수
