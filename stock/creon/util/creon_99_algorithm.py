@@ -1,17 +1,10 @@
-from . import utils
-
-from . import creon
-
-from . import creon_98_stocks_by_industry
-
-from . import creon_1_SB_PB
-
-from . import creon_0_Init
-
 from time import sleep
 
-
-# import login # .gitignore
+from . import utils
+from . import creon
+from . import creon_0_Init
+from . import creon_1_SB_PB
+from . import creon_98_stocks_by_industry
 
 class Algorithm:
     관심_종목_리스트 = (
@@ -210,7 +203,7 @@ class Algorithm:
 # algorithm_3 : "금일 고가 > 전일 종가" 인 횟수를 counting
 # 세금 : 매수, 매도 ==> 그냥 0.3 % 정도라고 생각하면 됨...
 # "종가 < 다음날 고가" 비교할 때, 수수료도 포함 시켜야 더 정확하겠다.
-    def algorithm_3__stock_purchase_recommandation(self, 전체기간=10, marketType=0, top=5, bPrint=False, comparison_period=2000):
+    def algorithm_3__stock_purchase_recommandation(self, 전체기간=10, marketType='코스닥', top=5, bPrint=False, comparison_period=2000):
         stTrading = creon.Trading()
 
         if stTrading.trade_init() == True:
@@ -218,14 +211,16 @@ class Algorithm:
             추천_종목_이름_리스트 = []
             투자_후보_예상수익 = []
 
-            if marketType == 0:
+            if marketType == '코스피':
                 __markeyType = creon_98_stocks_by_industry.StocksByIndustry.MARKET['코스피']
-            elif marketType == 1:
+            elif marketType == '코스닥':
+                __markeyType = creon_98_stocks_by_industry.StocksByIndustry.MARKET['코스닥']
+            else:
                 __markeyType = creon_98_stocks_by_industry.StocksByIndustry.MARKET['코스닥']
 
-            # stock_code_list = self.stStockByIndustry.getStockListByMarket(__markeyType)
-            stock_code_list = self.stStockByIndustry.getStockListByMarket(1)
-            stock_code_list += (self.stStockByIndustry.getStockListByMarket(2))
+            stock_code_list = self.stStockByIndustry.getStockListByMarket(__markeyType)
+            # stock_code_list = self.stStockByIndustry.getStockListByMarket(1)
+            # stock_code_list += (self.stStockByIndustry.getStockListByMarket(2))
             stock_name_list = self.stUtils.get_nameList_from_codeList(stock_code_list)
             
             # stock_name_list = self.후보군_종목_리스트
@@ -495,7 +490,7 @@ class Algorithm:
 
 # 장 마감? 1분 전, 현재 주가로 1 주 씩 매수
                 __top = 5 # 5 개 회사 추천
-                __추천_종목_리스트, __투자_후보_이름, __투자_후보_예상수익 = self.algorithm_3__stock_purchase_recommandation(marketType=1, top=__top) # marketType(0: 코스피, 1: 코스닥)
+                __추천_종목_리스트, __투자_후보_이름, __투자_후보_예상수익 = self.algorithm_3__stock_purchase_recommandation(marketType='코스닥', top=__top) # marketType(0: 코스피, 1: 코스닥)
                 print('** 추천 종목:', __투자_후보_이름, __투자_후보_예상수익)
 
 # >> 장 마감 1분 전인지 확인 (1분 이상 남았다면 대기)
@@ -519,7 +514,6 @@ class Algorithm:
                     
 # 매도 실패에 대한 예외처리 필요.
                 print('******************매도 실패에 대한 예외 처리******************')
-                sleep(10)
                 # 현재가로 매도 필요한 종목 목록..!
                 for i in range(len(self.매수_목록_0220)):
                     __stockConclusion = selling_subscribe_stockconclusion_list[i].getConclusion()
@@ -545,7 +539,7 @@ class Algorithm:
                             매매 = 1, # 1: 매도, 2: 매수
                             stockName=__종목명,
                             # 주문단가=(주식_잔고_리스트[i]['손익단가'] * 1.02), # 손익단가 * 1.02 == 2 % 높게 매도
-                            주문단가=__현재가,
+                            주문단가=__현재가, # 5 호가 낮게
                             주문수량=1,
                             bPrint=False,
                             bTest=False)
