@@ -1,6 +1,6 @@
 import win32com.client
 
-import utils
+from . import utils
 
 class StocksByIndustry:
     MARKET = {

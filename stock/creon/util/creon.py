@@ -4,7 +4,7 @@ import pythoncom
 import datetime #https://datascienceschool.net/view-notebook/465066ac92ef4da3b0aba32f76d9750a/
 import time
 
-import utils
+from . import utils
 
 TRUE = 1
 FALSE = 0
@@ -40,6 +40,22 @@ class Trading:
         # 주식 잔고 조회
         self.instCpTd6033 = win32com.client.Dispatch("CpTrade.CpTd6033")
 
+        # 주식 예약 정보 조회 (https://money2.creontrade.com/e5/mboard/ptype_basic/HTS_Plus_Helper/DW_Basic_Read_Page.aspx?boardseq=291&seq=187&page=1&searchString=CpTdNew9061&p=&v=&m=)
+        self.instCpTdNew9061 = win32com.client.Dispatch("CpTrade.CpTdNew9061")
+
+        # 주식 취소
+        self.instCpTd0314 = win32com.client.Dispatch("CpTrade.CpTd0314")
+
+        
+        self.상품관리구분코드 = {
+            '주식':1,
+            '선물/옵션':2,
+            'EUREX':16,
+            '해외선물':64,
+        } # __상품관리구분코드['주식'] + __상품관리구분코드['선물/옵션'] 요런 식으로 사용 가능함
+        self.stockAccount = ''
+        self.stockAccountFlag = ''
+
     # 거래 관련부 : init -> setinputvalue -> blockrequest
     def trade_init(self):
         bInitResult = self.instCpTdUtil.TradeInit()
@@ -48,6 +64,9 @@ class Trading:
             if self.logging == True:
                 print('[tradeInit] 성공')
             bReturn = True
+
+            self.stockAccount = self.instCpTdUtil.AccountNumber[0]
+            self.stockAccountFlag = self.instCpTdUtil.GoodsList(self.stockAccount, self.상품관리구분코드['주식']) # ?
         elif bInitResult == -1:
             print('[tradeInit] 오류')
         elif bInitResult == 1:
@@ -76,21 +95,15 @@ class Trading:
         if ((매매 == 1) | (매매 == 2)) == False:
             print('[param] 매매 를 1(매도) 또는 2(매수)로 지정하세요')
             return
-        __내_계좌_번호 = self.instCpTdUtil.AccountNumber[0]
+
         if bPrint == True:
-            print('__내_계좌_번호:', __내_계좌_번호)
-        __상품관리구분코드 = {
-            '주식':1,
-            '선물/옵션':2,
-            'EUREX':16,
-            '해외선물':64,
-        } # __상품관리구분코드['주식'] + __상품관리구분코드['선물/옵션'] 요런 식으로 사용 가능함
-        __상품_목록 = self.instCpTdUtil.GoodsList(__내_계좌_번호, __상품관리구분코드['주식']) # __상품_목록은 배열임..!
+            print('__내_계좌_번호:', self.stockAccount)
+
         if bPrint == True:
-            print(__상품_목록)
+            print(self.stockAccountFlag)
         self.instCpTd0311.SetInputValue(SetInputValue_param['주문종류코드'], 매매) # 1: 매도, 2: 매수
-        self.instCpTd0311.SetInputValue(SetInputValue_param['계좌번호'], __내_계좌_번호)
-        self.instCpTd0311.SetInputValue(SetInputValue_param['상품관리구분코드'], __상품_목록[0]) # 
+        self.instCpTd0311.SetInputValue(SetInputValue_param['계좌번호'], self.stockAccount)
+        self.instCpTd0311.SetInputValue(SetInputValue_param['상품관리구분코드'], self.stockAccountFlag[0]) # 
         stockCode = self.stUtils.get_code_from_name(stockName)
         self.instCpTd0311.SetInputValue(SetInputValue_param['종목코드'], stockCode)
         self.instCpTd0311.SetInputValue(SetInputValue_param['주문수량'], 주문수량)
@@ -98,6 +111,7 @@ class Trading:
         self.instCpTd0311.SetInputValue(SetInputValue_param['주문조건구분코드'], '0') # '0' : 없음 [default]
         self.instCpTd0311.SetInputValue(SetInputValue_param['주문호가구분코드'], '01') # '01' : 보통 [default]
 
+        __orderCode = 0
         # 요청
         if bTest == False:
             BlockRequest_result = self.instCpTd0311.BlockRequest()
@@ -106,27 +120,29 @@ class Trading:
                     print('[주식_주문] result: 정상 요청 (%s 매도)' % (stockName))
                 elif 매매 == 2: # 매수
                     print('[주식_주문] result: 정상 요청 (%s 매수)' % (stockName))
+                __orderCode = self.instCpTd0311.GetHeaderValue(8) # 8:(long) 주문번호
+                
             else:
                 print('[주식_주문] result: 문제 발생')
 
         # 결과 조회 -> Subscribe 방식으로 확인 해야함
         
+        return __orderCode
+
     def 주식_잔고_조회(self, bPrint=False):
         if bPrint == True:
             print('> 주식_잔고_조회')
 
-        __계좌번호 = self.instCpTdUtil.AccountNumber[0]
-        __주식상품_구분 = self.instCpTdUtil.GoodsList(__계좌번호, 1) # ?
         if bPrint == True:
-            print('계좌번호 : %s, 주식상품_구분 : %s' % (__계좌번호, __주식상품_구분))
+            print('계좌번호 : %s, 주식상품_구분 : %s' % (self.stockAccount, self.stockAccountFlag))
         
         input_value_field = {
             '계좌번호': 0,
             '상품관리구분코드': 1,
             '요청건수': 2
         }
-        self.instCpTd6033.SetInputValue(input_value_field['계좌번호'], __계좌번호)  # 계좌번호
-        self.instCpTd6033.SetInputValue(input_value_field['상품관리구분코드'], __주식상품_구분[0])  # 상품구분 - 주식 상품 중 첫번째
+        self.instCpTd6033.SetInputValue(input_value_field['계좌번호'], self.stockAccount)  # 계좌번호
+        self.instCpTd6033.SetInputValue(input_value_field['상품관리구분코드'], self.stockAccountFlag[0])  # 상품구분 - 주식 상품 중 첫번째
         self.instCpTd6033.SetInputValue(input_value_field['요청건수'], 50)  # 요청 건수(최대 50)
         # self.dicflag1 = {ord(' '): '현금',
         #                  ord('Y'): '융자',
@@ -194,6 +210,57 @@ class Trading:
             if self.instCpTd6033.Continue == False: # README.md 의 '3. RQ/RP 의 연속 data 통신' 참고
                 break
         return ret_item_list
+
+    def 주식_주문_취소(self, 원주문번호, 종목이름, 취소수량=0, bPrint=False):
+        if bPrint == True:
+            print('> 주식_주문_취소 (원주문번호: %s, 종목이름: %s, 취소수량: %s)' % (원주문번호, 종목이름, 취소수량))
+
+        __SetInputValue_param = {
+            '원주문번호': 1,
+            '계좌번호': 2,
+            '상품관리구분코드': 3,
+            '종목코드': 4,
+            '취소수량': 5, # 0 입력하면 잔량 전부
+        }
+        if bPrint == True:
+            print('   > 계좌: %s, 주식상품_구분: %s' % (self.stockAccount, self.stockAccountFlag))
+
+        self.instCpTd0314.SetInputValue(__SetInputValue_param['원주문번호'], 원주문번호)
+        self.instCpTd0314.SetInputValue(__SetInputValue_param['계좌번호'], self.stockAccount)
+        self.instCpTd0314.SetInputValue(__SetInputValue_param['상품관리구분코드'], self.stockAccountFlag[0])
+        self.instCpTd0314.SetInputValue(__SetInputValue_param['종목코드'], self.stUtils.get_code_from_name(종목이름))
+        self.instCpTd0314.SetInputValue(__SetInputValue_param['취소수량'], 취소수량)
+
+        ret = self.instCpTd0314.BlockRequest()
+        print('ret : %s' % (ret))
+
+        print("[CpRPOrder/BlockRequestCancel] 주문결과", self.instCpTd0314.GetDibStatus(), self.instCpTd0314.GetDibMsg1())
+        if self.instCpTd0314.GetDibStatus() != 0:
+            return False
+        return True
+
+
+    def 주식_주문_두번째방법(self, 매매, 종목코드, bPrint=False):
+        if bPrint == True:
+            print('> 주식_주문_조회')
+
+        if bPrint == True:
+            print('계좌번호 : %s, 주식상품_구분 : %s' % (self.stockAccount, self.stockAccountFlag))
+        
+        input_value_field = {
+            '계좌번호': 0,
+            '상품관리구분코드': 1,
+            '주문종류코드': 2,
+            '종목코드': 3,
+
+        }
+        self.instCpTdNew9061.SetInputValue(input_value_field['계좌번호'], self.stockAccount)  # 계좌번호
+        self.instCpTdNew9061.SetInputValue(input_value_field['상품관리구분코드'], self.stockAccountFlag[0])  # 상품구분 - 주식 상품 중 첫번째
+        self.instCpTdNew9061.SetInputValue(input_value_field['주문종류코드'], 매매)  # 주문종류코드 - 1: 매도, 2: 매수)
+        self.instCpTdNew9061.SetInputValue(input_value_field['종목코드'], 종목코드)  # 주문종류코드 - 1: 매도, 2: 매수)
+
+
+        # self.instCpTdNew9061
 
 class StockInfo:
     현재가_4 = 4 

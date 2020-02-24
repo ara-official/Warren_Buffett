@@ -7,7 +7,7 @@ import subprocess
 
 from time import sleep
 
-import login
+from . import login
 
 class Connection:
     def __init__(self, logging=False):
