@@ -12,6 +12,7 @@ class Algorithm:
     #TODO: JSON 치환.
     매수_목록_0220 = (
         '마니커',
+        '위닉스',
     )
 
 
@@ -357,10 +358,9 @@ class Algorithm:
 
                             # 매도 수행
                             __매도_원주문번호 = self.stTrading.주식_주문( # *** 매수/매도 주문은 정상 동작함
-                                매매 = 2, # 1: 매도, 2: 매수
+                                매매 = 1, # 1: 매도, 2: 매수
                                 stockName=self.매수_목록_0220[j],
-                                #주문단가=self.stUtils.get_trade_price((주식_잔고_리스트[i]['손익단가'] * 1.02)), # 손익단가 * 1.02 == 2 % 높게 매도
-                                주문단가=self.stUtils.get_trade_price(807), # 손익단가 * 1.02 == 2 % 높게 매도
+                                주문단가=self.stUtils.get_trade_price((주식_잔고_리스트[i]['손익단가'] * 1.02)), # 손익단가 * 1.02 == 2 % 높게 매도
                                 # 주문 단가 자리 수 맞춰야 함.
                                 주문수량=1,
                                 bPrint=False,
