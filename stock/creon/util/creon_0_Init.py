@@ -59,6 +59,8 @@ class Connection:
             'Start-Process', 
             ]
         subprocess.run(cmd, shell=True)
-        while not self.check_connect():
+        while True:
+            if self.check_connect() == True:
+                break
             sleep(1)
         return True

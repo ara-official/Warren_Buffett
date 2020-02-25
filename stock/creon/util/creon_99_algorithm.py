@@ -7,26 +7,38 @@ from . import creon_1_SB_PB
 from . import creon_98_stocks_by_industry
 
 class Algorithm:
+    매수_목록_0220_이전 = (
+        ''
+    )
     #TODO: JSON 치환.
     매수_목록_0220 = (
-        '파인테크닉스',
         '이더블유케이',
-        '인프라웨어',
-        '에이치엘비파워',
+        '파인테크닉스',
+        '신스타임즈',
+        'APS홀딩스',
         '제일바이오',
+        '인프라웨어', # 2 주
+        '에이치엘비파워', # 2 주
+        '아이씨디',
     )
 
-    매수_목록_0224 = (
-        '창해에탄올',
-        '진양제약',
-        '메디앙스',
-        '고려제약',
-        # '대림제지',
+    # 매수_목록_0224 = (
+    #     # '창해에탄올',
+    #     # '진양제약',
+    #     # '메디앙스',
+    #     # '고려제약',
+    #     # '대림제지',
+    # )
+
+    매수_목록_0226 = (
+        '오공',
+        '바른손이앤에이',
     )
     
     전체_매수_목록 = ()
     전체_매수_목록 += 매수_목록_0220
-    전체_매수_목록 += 매수_목록_0224
+    # 전체_매수_목록 += 매수_목록_0224
+    전체_매수_목록 += 매수_목록_0226
 
     def __init__(self):
         self.stInit = creon_0_Init.Connection(logging=True)
@@ -241,7 +253,7 @@ class Algorithm:
 
 # 시나리오
 # 장 중인지 확인
-# >> 장 열릴 때까지 대기
+# >> [1] 장 열릴 때까지 대기
 # 장 열림!
 # >> 어제 매수한 종목 있으면, 수익률(ex. 2%) 에 맞춰 매도 걸어놓음
 # >>> 매도 시, 가격 최소 단위? 맞춰서 매도 걸어야 함.;;
@@ -257,15 +269,14 @@ class Algorithm:
 # (처음으로 돌아가서 반복) <-- x
 
     def algorithm_4(self):
-
-        __bDBG = True
+        __bDBG = False
 
         __bExit = False
         __bIsStockMarketOpen = False
 
         # hard coding
         매도_원주문_번호_리스트 = []
-        매도_종목_리스트 = []
+        매도_종목_리스트 = [] # 원주문번호랑 매도 종목이랑 matching 하기위해 사용.
 
         __stCpStockConclusion = creon_1_SB_PB.CpPBConclusion()
 
@@ -275,12 +286,11 @@ class Algorithm:
             bConnect = self.stInit.do_connect() # NOTE: always return True. 
             if __bDBG == True:
                 __bIsStockMarketOpen = True
-                bConnect = True
                 print('__bIsStockMarketOpen: %s, bConnect: %s' % (__bIsStockMarketOpen, bConnect))
 
-# >> 장 열릴 때까지 대기
+# >> [1] 장 열릴 때까지 대기
             if (bConnect == False) | (__bIsStockMarketOpen == False):
-                print('# >> 장 열릴 때까지 대기')
+                print('# >> [1] 장 열릴 때까지 대기')
                 while True:
                     sleep(1)
                     print('현재 시간 : %s' % (self.stUtils.현재_시간()))
@@ -313,22 +323,36 @@ class Algorithm:
                 for i in range(len(주식_잔고_리스트)):
                     for j in range(len(self.전체_매수_목록)):
                         if 주식_잔고_리스트[i]['종목명'] == self.전체_매수_목록[j] :
-
+                            __주문수량 = 1
                             # 매도 수행
+                            if (self.전체_매수_목록[j] == '인프라웨어') | (self.전체_매수_목록[j] == '에이치엘비파워'):
+                                __주문수량 = 2
+
                             __매도_원주문번호 = self.stTrading.주식_주문( # *** 매수/매도 주문은 정상 동작함
                                 매매 = 1, # 1: 매도, 2: 매수
                                 stockName=self.전체_매수_목록[j],
                                 주문단가=self.stUtils.get_trade_price((주식_잔고_리스트[i]['손익단가'] * 1.02)), # 손익단가 * 1.02 == 2 % 높게 매도
                                 # 주문 단가 자리 수 맞춰야 함.
-                                주문수량=1,
+                                주문수량=__주문수량,
                                 bPrint=False,
                                 bTest=False
                             )
-                            매도_원주문_번호_리스트.append(__매도_원주문번호)
-                            매도_종목_리스트.append(self.전체_매수_목록[j])
+                            if __매도_원주문번호 != 0: # 0: 매도 주문 실패
+                                매도_원주문_번호_리스트.append(__매도_원주문번호)
+                                매도_종목_리스트.append(self.전체_매수_목록[j])
                 print('매도_원주문_번호_리스트: %s' % (매도_원주문_번호_리스트))
 
-# 장 마감? 1분 전, 현재 주가로 1 주 씩 매수
+                __bCalculate = False
+                __계산_타이밍 = 1800 # 장 마감 30 분 전에 계산
+                while __bCalculate == False:
+                    __마감까지_남은시간 = self.stUtils.마감_까지_남은_시간().total_seconds()
+                    __bCalculate = (__마감까지_남은시간 <= __계산_타이밍) # 장 중이지 않을 경우, __마감까지_남은시간 는 음수
+                    # if __bDBG == True:
+                    #     __bBuyStock = True
+
+                    print('장 마감까지 %s 초 남음 (%s) (계산 타이밍: %s 초 전)' % (round(__마감까지_남은시간, 2), __bCalculate, __계산_타이밍))
+                    sleep(1)
+# 장 마감? 1분 전, 현재 주가로 1 주 씩 매수 # 이 것도 딜레이 걸어야 함..
                 __top = 5 # 5 개 회사 추천
                 __추천_종목_리스트, __투자_후보_이름, __투자_후보_예상수익 = self.algorithm_3__stock_purchase_recommandation(marketType='코스닥', top=__top) # marketType(0: 코스피, 1: 코스닥)
                 print('** 추천 종목:', __투자_후보_이름, __투자_후보_예상수익)
@@ -340,16 +364,14 @@ class Algorithm:
                 # if __bDBG == True:
                 #     __bBuyStock = True
                 # 0 원에 걸면? -> 바로 사지거나 팔릴 수 있음
-                __매수_타이밍 = 120 # 2 분 전,,
+                __매수_타이밍 = 120 # 2 분 30 초 전,,
                 while __bBuyStock == False:
                     __마감까지_남은시간 = self.stUtils.마감_까지_남은_시간().total_seconds()
-                    print('__마감까지_남은시간: %s' % (__마감까지_남은시간))
-                    
                     __bBuyStock = (__마감까지_남은시간 <= __매수_타이밍) # 장 중이지 않을 경우, __마감까지_남은시간 는 음수
                     # if __bDBG == True:
                     #     __bBuyStock = True
 
-                    print('장 마감까지 %s 초 남음 (%s) (매수 타이밍: %s 초 전)' % (__마감까지_남은시간, __bBuyStock, __매수_타이밍))
+                    print('장 마감까지 %s 초 남음 (%s) (매수 타이밍: %s 초 전)' % (round(__마감까지_남은시간, 2), __bBuyStock, __매수_타이밍))
                     sleep(1)
                     
 # 매도 실패에 대한 예외처리 필요.
@@ -366,21 +388,26 @@ class Algorithm:
                         # def 주식_주문_취소(self, 원주문번호, 종목이름, 취소수량=0, bPrint=False):
                         self.stTrading.주식_주문_취소(
                             원주문번호=매도_원주문_번호_리스트[i], # 원래 다 0 인지 확인 필요
-                            종목이름=매도_종목_리스트[i],
+                            종목이름=매도_종목_리스트[i], # 원주문번호랑 매도 종목이랑 순서 맞춰져 있음
                             취소수량=0, # 0: 전부
                             bPrint=True)
 
-                        sleep(3) # 혹시 몰라서 delay
+                        sleep(1) # 혹시 몰라서 delay
                         ## 현재가 매도 주문
                         print(__종목명)
                         __stockInfo = self.stStockInfo.getInfoDetail(__종목명, bPrint=True)
                         __현재가 = __stockInfo[0]
+
+                        __주문수량 = 1
+                        if (__종목명 == '인프라웨어') | (__종목명 == '에이치엘비파워'):
+                            __주문수량 = 2
+
                         self.stTrading.주식_주문( # *** 매수/매도 주문은 정상 동작함
                             매매 = 1, # 1: 매도, 2: 매수
                             stockName=__종목명,
                             # 주문단가=(주식_잔고_리스트[i]['손익단가'] * 1.02), # 손익단가 * 1.02 == 2 % 높게 매도
                             주문단가=self.stUtils.get_trade_price(__현재가, 호가=-5),
-                            주문수량=1, # 0 이라고 전량 아님,,!!
+                            주문수량=__주문수량, # 0 이라고 전량 아님,,!!
                             bPrint=False,
                             bTest=False)
                 print('************************************************************************')
@@ -415,6 +442,8 @@ class Algorithm:
                     __bBuyComplete = False
                     __bSellComplete = False
 # >>> 매수 성공 확인
+                    __timeout = 30
+                    __timeout_count = 0
                     while True:
                         sleep(1)
                         if __stCpStockConclusion.get_buy_count() == len(__투자_후보_이름):
@@ -425,7 +454,12 @@ class Algorithm:
                         print('[%s] 매도 성공 대기: (%s/%s)' % (self.stUtils.현재_시간(), __stCpStockConclusion.get_sell_count(), 5))
                         print('[%s] 매수 성공 대기: (%s/%s)' % (self.stUtils.현재_시간(), __stCpStockConclusion.get_buy_count(), len(self.매수_목록_0220)))
                         
+                        __timeout_count+=1
+                        if __timeout_count > __timeout:
+                            __bExit = True
+                            break
                         if (__bBuyComplete == True) & (__bSellComplete == True):
+                            __bExit = True
                             break
 
 # >>> 모든 subscribe 해제
