@@ -78,7 +78,7 @@ class Trading:
         return bReturn
 
 
-    def 주식_주문(self, 매매, stockName, 주문단가, 주문수량, bPrint=False, bTest=False):
+    def 주식_주문(self, 매매, stockName, 주문단가, 주문수량, 주문호가구분코드='01', bPrint=False, bTest=False):
         SetInputValue_param = {
             '주문종류코드':0,
             '계좌번호':1,
@@ -109,7 +109,7 @@ class Trading:
         self.instCpTd0311.SetInputValue(SetInputValue_param['주문수량'], 주문수량)
         self.instCpTd0311.SetInputValue(SetInputValue_param['주문단가'], 주문단가)
         self.instCpTd0311.SetInputValue(SetInputValue_param['주문조건구분코드'], '0') # '0' : 없음 [default]
-        self.instCpTd0311.SetInputValue(SetInputValue_param['주문호가구분코드'], '01') # '01' : 보통 [default]
+        self.instCpTd0311.SetInputValue(SetInputValue_param['주문호가구분코드'], 주문호가구분코드) # '01' : 보통 [default], '03': 시장가 ([참고] https://money2.creontrade.com/html/WTS/Customer/CWGuideUser/DW05_CUS_INF_001.html?m=2182&p=5457&v=4614#tabM1_2)
 
         __orderCode = 0
         # 요청
@@ -123,7 +123,7 @@ class Trading:
                 __orderCode = self.instCpTd0311.GetHeaderValue(8) # 8:(long) 주문번호
                 
             else:
-                print('[주식_주문] result: 문제 발생')
+                print('[주식_주문] result: 문제 발생 (%s)' % (BlockRequest_result))
 
         # 결과 조회 -> Subscribe 방식으로 확인 해야함
         

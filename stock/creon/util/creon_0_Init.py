@@ -14,33 +14,20 @@ class Connection:
         self.instCpCybos = win32com.client.Dispatch("CpUtil.CpCybos")
         self.logging = logging
 
-    def do_connect(self):
-        bConnect = self.check_connect()
-        if bConnect == False:
-            self.kill_creon()
-            bConnect = self.run_creon(login.id, login.pwd, login.pwdcert)
-        return bConnect
+        self.log_msg = ''
 
-    def check_connect(self):
-        bIsConnected = False
+    def print_log_msg(self):
+        print(self.log_msg)
+        self.logging = ''
 
-        if ctypes.windll.shell32.IsUserAnAdmin() == False:
-            print("[check_connect] 오류: 관리자 권한으로 실행하세요")
-            return False
-
-        if self.logging == True:
-            print("[check_connect] 정상: 관리자 권한으로 실행된 프로세스")
-
-        # 연결 상태 확인
-        if self.instCpCybos.IsConnect == 1:
-            bIsConnected = True
-            if self.logging == True:
-                print("[check_connect] connect! (ret : %s)" % bIsConnected)
-        else :
-            bIsConnected = False
-            print("[check_connect] fail.. (ret : %s)" % bIsConnected)
-            
-        return bIsConnected
+    def do_creon_forced_reconnect(self): # kill_creon() 을
+        self.kill_creon()
+        connect = self.run_creon(login.id, login.pwd, login.pwdcert)
+        __wait_time = 40
+        print('forced reconnect, wait %s seconds' % (__wait_time))
+        sleep(__wait_time)
+        
+        return connect
 
     def kill_creon(self):
         print('[kill_creon]')
@@ -59,8 +46,52 @@ class Connection:
             'Start-Process', 
             ]
         subprocess.run(cmd, shell=True)
+        
         while True:
-            if self.check_connect() == True:
+            if self.is_creon_connected_as_admin() == True:
                 break
-            sleep(1)
+            print(self.print_log_msg())
+            sleep(2)
         return True
+
+    def is_creon_connected_as_admin(self):
+        connect = False
+        admin = self.is_vs_run_as_admin() # 관리자 권한 실행 확인
+
+        if admin == False:
+            connect = False
+        else:
+            connect = self.is_creon_connected()
+
+        return connect
+
+    def is_vs_run_as_admin(self): # vs: visual studio
+        value = ctypes.windll.shell32.IsUserAnAdmin()
+        if value == False:
+            self.log_msg += '[오류 No!]: 관리자 권한으로 실행하세요 | '
+        else:
+            self.log_msg += '[정상 Yes]: 관리자 권한으로 실행된 프로세스 | '
+        
+        return value
+        
+    def is_creon_connected(self):
+        ret = False
+
+        connect = self.instCpCybos.IsConnect
+
+        if connect == 0:
+            self.log_msg += '연결끊김 | '
+        elif connect == 1:
+            self.log_msg += '연결정상 | '
+
+        connect_server = self.instCpCybos.ServerType # 0: 연결끊김, 1: cybosplus 서버, 2: HTS 보통서버
+
+        if connect_server == 0:
+            self.log_msg += '서버연결 끊김 | '
+        else:
+            self.log_msg += '서버연결 되어있음 (%s) | ' % (connect_server)
+
+        if (connect == 1) & (connect_server != 0):
+            ret = True
+        
+        return ret
