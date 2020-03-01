@@ -12,7 +12,7 @@ from util import creon_1_SB_PB
 from util import creon_98_stocks_by_industry
 from util import login
 
-# from data_process import json_utils
+from data_process import json_utils
 
 class Algorithm:
     매수_목록_0220_이전 = (
@@ -59,11 +59,11 @@ class Algorithm:
         '대창솔루션',
     )
     
-    기존_매수_목록 = ()
-    기존_매수_목록 += 매수_목록_0220
-    # 기존_매수_목록 += 매수_목록_0224
-    # 기존_매수_목록 += 매수_목록_0226
-    기존_매수_목록 += 매수_목록_0227
+    current_purchase_stock_list = ()
+    current_purchase_stock_list += 매수_목록_0220
+    # current_purchase_stock_list += 매수_목록_0224
+    # current_purchase_stock_list += 매수_목록_0226
+    current_purchase_stock_list += 매수_목록_0227
 
     def __init__(self):
 
@@ -311,11 +311,11 @@ class Algorithm:
 # [5] 추천된 종목               => 오늘 종가 구매
 
     def algorithm_4__buy_yesterday_low_price__sell_today_high_price(self):
-        # json_utils.json_write('stock\\creon\\util\\buy_2020.json', 'test', Algorithm.매수_목록_0228)
-        # test = json_utils.json_read('stock\\creon\\util\\buy_2020.json', 'test')
+        json_utils.json_write('purchase_list_0301.json', 'test', Algorithm.current_purchase_stock_list)
+        test = json_utils.json_read('purchase_list_0301.json', 'test')
 
-        # print(test)
-        # exit()
+        print(test)
+        exit()
 ##########
         __기대수익률 = 1.1 # %
 
@@ -378,22 +378,22 @@ class Algorithm:
                 # 매도 <-- 어제 매수한 종목에 대한 매도 주문
 
                 __subscribe_code_list = []
-                for i in range(len(self.기존_매수_목록)):
-                    __code = self.stUtils.get_code_from_name(self.기존_매수_목록[i])
+                for i in range(len(self.current_purchase_stock_list)):
+                    __code = self.stUtils.get_code_from_name(self.current_purchase_stock_list[i])
                     __subscribe_code_list.append(__code)
                 __stCpStockConclusion.subscribe(__subscribe_code_list, __stCpStockConclusion)
                 
                 for i in range(len(주식_잔고_리스트)):
-                    for j in range(len(self.기존_매수_목록)):
-                        if 주식_잔고_리스트[i]['종목명'] == self.기존_매수_목록[j] :
+                    for j in range(len(self.current_purchase_stock_list)):
+                        if 주식_잔고_리스트[i]['종목명'] == self.current_purchase_stock_list[j] :
                             __주문수량 = 1
                             # 매도 수행
-                            # if (self.기존_매수_목록[j] == '인프라웨어') | (self.기존_매수_목록[j] == '에이치엘비파워'):
+                            # if (self.current_purchase_stock_list[j] == '인프라웨어') | (self.current_purchase_stock_list[j] == '에이치엘비파워'):
                             #     __주문수량 = 2
 
                             __매도_원주문번호 = self.stTrading.주식_주문( # *** 매수/매도 주문은 정상 동작함
                                 매매 = 1, # 1: 매도, 2: 매수
-                                stockName=self.기존_매수_목록[j],
+                                stockName=self.current_purchase_stock_list[j],
                                 주문단가=self.stUtils.get_trade_price((주식_잔고_리스트[i]['손익단가'] * (1 + (__기대수익률/100)))), # 손익단가 * 1.02 == 2 % 높게 매도
                                 # 주문 단가 자리 수 맞춰야 함.
                                 주문수량=__주문수량,
@@ -402,7 +402,7 @@ class Algorithm:
                             )
                             if __매도_원주문번호 != 0: # 0: 매도 주문 실패
                                 매도_원주문_번호_리스트.append(__매도_원주문번호)
-                                매도_종목_리스트.append(self.기존_매수_목록[j])
+                                매도_종목_리스트.append(self.current_purchase_stock_list[j])
                 print('매도_원주문_번호_리스트: %s' % (매도_원주문_번호_리스트))
 
                 __bCalculate = False
@@ -452,7 +452,7 @@ class Algorithm:
                     if __stockConclusion == False: # 매도 안된 경우
                         # [TODO] 매도 주문 취소
                         # 기존 매도 주문 일괄 취소
-                        __종목명 = self.기존_매수_목록[i]
+                        __종목명 = self.current_purchase_stock_list[i]
 
                         # def 주식_주문_취소(self, 원주문번호, 종목이름, 취소수량=0, bPrint=False):
                         self.stTrading.주식_주문_취소(
@@ -531,12 +531,12 @@ class Algorithm:
                         sleep(2)
                         if __stCpStockConclusion.get_buy_count() == len(__투자_후보_이름):
                             __bBuyComplete = True
-                        if __stCpStockConclusion.get_sell_count() == len(self.기존_매수_목록):
+                        if __stCpStockConclusion.get_sell_count() == len(self.current_purchase_stock_list):
                             __bSellComplete = True
 
                         print('[%s] 매도 (%s/%s), 매수 (%s/%s)' % 
                         (self.stUtils.현재_시간(), 
-                        __stCpStockConclusion.get_sell_count(), len(self.기존_매수_목록),
+                        __stCpStockConclusion.get_sell_count(), len(self.current_purchase_stock_list),
                         __stCpStockConclusion.get_buy_count(), len(__투자_후보_이름)))
                         
                         __timeout_count+=1
@@ -550,8 +550,8 @@ class Algorithm:
 # >>> 모든 subscribe 해제
                     __stCpStockConclusion.unsubscribe()
                     # 매도 종목 unsubscribe
-                    # for i in range(len(self.기존_매수_목록)):
-                    #     __code = self.stUtils.get_code_from_name(self.기존_매수_목록[i])
+                    # for i in range(len(self.current_purchase_stock_list)):
+                    #     __code = self.stUtils.get_code_from_name(self.current_purchase_stock_list[i])
                     #     __stCpStockConclusion.unsubscribe(__code, __stCpStockConclusion)
                     # # 매수 종목 unsubscribe
                     # for i in range(len(__투자_후보_이름)):
