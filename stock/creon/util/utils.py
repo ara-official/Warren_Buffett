@@ -2,12 +2,14 @@ import win32com.client
 import pythoncom
 from time import sleep
 import datetime
+import json
+from collections import OrderedDict
 
 from . import creon_0_Init
 
 
 class Utils:
-    # 0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
+    0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
 
     InputValue_StockChart_Field_type = {
         '날짜': 0,
@@ -21,6 +23,20 @@ class Utils:
         '거래대금': 9,
         '누적체결매도수량': 10
     }
+    
+    def json_read(self, json_file_name, key):
+        print("json file " + json_file_name)
+        with open(json_file_name, "r") as json_file:
+            json_data = json.load(json_file)
+        return json_data[key]
+
+    def json_write(self, json_file_name, key, value=""):
+        print("json file " + json_file_name)
+        file_data = dict()
+        file_data[key] = value
+        json.dumps(file_data, ensure_ascii=False, indent="\t")
+        with open(json_file_name, 'w', encoding="utf-8") as make_file:
+            json.dump(file_data, make_file, ensure_ascii=False, indent="\t")
 
     def get_trade_price(self, aim_pr, 호가=0):
         price_gap = 0
@@ -82,22 +98,22 @@ class Utils:
         self.instStockChart.SetInputValue(
             self.조회방법, 조회방법)  # 1: 조회 기간, 2: 조회 개수
         self.instStockChart.SetInputValue(self.요청_개수, 요청기간_또는_요청일수)
-        # self.instStockChart.SetInputValue(__dataType, 5) # 5: 종가
-        # 0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
+        self.instStockChart.SetInputValue(__dataType, 5) # 5: 종가
+        0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
         self.instStockChart.SetInputValue(self.요청할_데이터의_종류, 요청할_데이터_종류)
         self.instStockChart.SetInputValue(self.차트의_종류, 차트종류)  # D : day
         self.instStockChart.SetInputValue(self.수정_주가_반영_여부, 수정주가반영여부)
 
         self.instStockChart.BlockRequest()  # request data from the server
 
-    # https://wikidocs.net/3684
+    https://wikidocs.net/3684
     def get_stock_value_n_days(self, stockCode, days, bPrint=False):
         if bPrint == True:
             print('code : %s, name : %s' %
                   (stockCode, self.get_name_from_code(stockCode)))
 
-        #(dataType, InputData)
-        # 0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
+        (dataType, InputData)
+        0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
         __dataTypeList = (0, 1, 2, 3, 4, 5, 6, 8, 9, 10)
         self.set_stock_chart_info_and_request(stockCode, ord(
             '2'), days, __dataTypeList, ord('D'), ord('1'))
@@ -107,8 +123,8 @@ class Utils:
         if bPrint == True:
             print('numData : %s' % __numData)
 
-        # __dateTime = datetime.datetime.now()
-        # __weekday = __dateTime.weekday()
+        __dateTime = datetime.datetime.now()
+        __weekday = __dateTime.weekday()
         __stockValueList = []
         for i in range(__numData):
             __stockValue = []
@@ -123,7 +139,7 @@ class Utils:
     def waiting(self, time, log='', bPrint=False):
         cnt = 0
         while True:
-            # ret = pythoncom.PumpWaitingMessages() # [?] pythoncom 에 빨간줄 왜 생길까?
+            ret = pythoncom.PumpWaitingMessages() # [?] pythoncom 에 빨간줄 왜 생길까?
             cnt = cnt + 1
             sleep(1)
             if bPrint == True:
@@ -132,7 +148,7 @@ class Utils:
                 break
 
     def calculate_tax(self, buying, selling):
-        # 매도 금액 - 매수 금액 - 매수 수수료 - 매도 수수료 - 매도 세금 > 0
+        매도 금액 - 매수 금액 - 매수 수수료 - 매도 수수료 - 매도 세금 > 0
         __selling_fee = 0.015
         __buying_fee = 0.015
         __selling_tax = 0.3
@@ -150,7 +166,7 @@ class Utils:
         return __start_time
 
     def 주식_장_마감_시간(self, bPrint=False):
-        # 09:00 ~ 15:30
+        09:00 ~ 15:30
         __cur_time = self.현재_시간()
         __end_time = datetime.datetime(
             year=__cur_time.year, month=__cur_time.month, day=__cur_time.day, hour=15, minute=30, second=0)
@@ -172,7 +188,7 @@ class Utils:
         return __diff
 
     def 시작_까지_남은_시간(self, bPrint=False):
-        # __diff = self.주식_장_시작_시간() - self.현재_시간()
+        __diff = self.주식_장_시작_시간() - self.현재_시간()
         __diff = self.주식_장_시작_시간() - self.현재_시간()
         if bPrint == True:
             print(__diff)

@@ -41,15 +41,16 @@ class Algorithm:
     # 기존_매수_목록 += 매수_목록_0226
 
     def __init__(self):
+        
         self.stInit = creon_0_Init.Connection(logging=True)
-
+        
         self.stUtils = utils.Utils()
         self.stStockByIndustry = creon_98_stocks_by_industry.StocksByIndustry()
 
         self.stStockInfo = creon.StockInfo()
 
         self.stTrading = creon.Trading()
-
+        
 # 적중 횟수 측정 (count) -> 기업들이 여러개
 # 적중 횟수 / 수집 기간 => (%) 높은 ~ 낮은
 # algorithm_3 : "금일 고가 > 전일 종가" 인 횟수를 counting
