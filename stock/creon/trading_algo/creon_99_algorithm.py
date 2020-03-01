@@ -1,10 +1,18 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
 from time import sleep
 
-from . import utils
-from . import creon
-from . import creon_0_Init
-from . import creon_1_SB_PB
-from . import creon_98_stocks_by_industry
+# https://blog.doosikbae.com/52
+from util import utils
+from util import creon
+from util import creon_0_Init
+from util import creon_1_SB_PB
+from util import creon_98_stocks_by_industry
+from util import login
+
+# from data_process import json_utils
 
 class Algorithm:
     매수_목록_0220_이전 = (
@@ -14,9 +22,9 @@ class Algorithm:
     매수_목록_0220 = (
         # '이더블유케이', # 1.06%
         '파인테크닉스',
-        '신스타임즈',
-        'APS홀딩스',
-        '제일바이오',
+        # '신스타임즈', # 1.24%
+        # 'APS홀딩스',
+        # '제일바이오',
         # '인프라웨어', # 2 주: +1.17%
         # '에이치엘비파워', # 2 주: +1.06%
         # '아이씨디', # -6.48%
@@ -34,23 +42,40 @@ class Algorithm:
         # '오공', # 1.1%
         # '바른손이앤에이', # -5.14%
     )
+
+    매수_목록_0227 = (
+        '스타모빌리티',
+        '한류AI센터',
+        # '아이씨디', # -3.49%
+        # '국일제지', # -3.28%
+        # '엘앤씨바이오'# -3.36%
+    )
+
+    매수_목록_0228 = (
+        '스타모빌리티', # 1
+        '한류AI센터', # 2
+        '두올산업',
+        '셀리버리',
+        '대창솔루션',
+    )
     
     기존_매수_목록 = ()
     기존_매수_목록 += 매수_목록_0220
     # 기존_매수_목록 += 매수_목록_0224
     # 기존_매수_목록 += 매수_목록_0226
+    기존_매수_목록 += 매수_목록_0227
 
     def __init__(self):
-        
-        self.stInit = creon_0_Init.Connection(logging=True)
-        
+
+        self.stInit = creon_0_Init.Connection()
+
         self.stUtils = utils.Utils()
         self.stStockByIndustry = creon_98_stocks_by_industry.StocksByIndustry()
 
         self.stStockInfo = creon.StockInfo()
 
-        self.stTrading = creon.Trading()
-        
+        self.stTrading = creon.Trading(logging=True)
+
 # 적중 횟수 측정 (count) -> 기업들이 여러개
 # 적중 횟수 / 수집 기간 => (%) 높은 ~ 낮은
 # algorithm_3 : "금일 고가 > 전일 종가" 인 횟수를 counting
@@ -58,10 +83,8 @@ class Algorithm:
 # "종가 < 다음날 고가" 비교할 때, 수수료도 포함 시켜야 더 정확하겠다.
     def algorithm_3__stock_purchase_recommandation(self, 전체기간=10, marketType='코스닥', top=5, 기대수익률=2, 비교횟수=5, bPrint=False, comparison_period=2000):
         __bPrint = bPrint
-        
-        stTrading = creon.Trading()
 
-        if stTrading.trade_init() == True:
+        if self.stTrading.do_trade_init() == True:
             추천_종목_리스트 = []
             추천_종목_이름_리스트 = []
             투자_후보_예상수익 = []
@@ -279,13 +302,31 @@ class Algorithm:
 # >>> 모든 subscribe 해제
 # (처음으로 돌아가서 반복) <-- x
 
-    def algorithm_4(self):
-        __기대수익률 = 1 # %
 
-        __bDBG = False
+## 알고리즘 단순화
+# [1] 크레온 접속
+# [2] 어제 종가 종목            => 오늘 고가 매도
+# [3] 종목 추천 알고리즘 수행
+# [4] 어제 종가 종목 (매도 실패) => 오늘 종가 매도
+# [5] 추천된 종목               => 오늘 종가 구매
+
+    def algorithm_4__buy_yesterday_low_price__sell_today_high_price(self):
+        # json_utils.json_write('stock\\creon\\util\\buy_2020.json', 'test', Algorithm.매수_목록_0228)
+        # test = json_utils.json_read('stock\\creon\\util\\buy_2020.json', 'test')
+
+        # print(test)
+        # exit()
+##########
+        __기대수익률 = 1.1 # %
+
+        __bDBG = True
 
         __bExit = False
         __bIsStockMarketOpen = False
+
+        __time_table = {
+            ''
+        }
 
         # hard coding
         매도_원주문_번호_리스트 = []
@@ -294,21 +335,22 @@ class Algorithm:
         __stCpStockConclusion = creon_1_SB_PB.CpPBConclusion()
 
         while True:
+            print('******************************************!!!!!!')
 # 장 중인지 확인
             __bIsStockMarketOpen = self.stUtils.장_중인지_확인()
-            self.stInit.kill_creon() # 오전 7 시 쯤에 점검 수행되면서, 접속 안되는 경우 있기 때문에, 아예 접속 끊는 동작 수행
-            bConnect = self.stInit.do_creon_forced_reconnect() # NOTE: always return True. 
-            self.stInit.print_log_msg()
+            connect = self.stInit.do_creon_forced_reconnect() # NOTE: always return True.
+            # creon_0_Init.Connection().kill_creon()
+            # connect = creon_0_Init.Connection().run_creon(login.id, login.pwd, login.pwdcert) 
             if __bDBG == True:
                 __bIsStockMarketOpen = True
-                print('__bIsStockMarketOpen: %s, bConnect: %s' % (__bIsStockMarketOpen, bConnect))
+                print('__bIsStockMarketOpen: %s, connect: %s' % (__bIsStockMarketOpen, connect))
 
 # >> [1] 장 열릴 때까지 대기
-            if (bConnect == False) | (__bIsStockMarketOpen == False):
+            if (connect == False) | (__bIsStockMarketOpen == False):
                 print('# >> [1] 장 열릴 때까지 대기')
                 while True:
                     sleep(5)
-                    # bConnect = self.stInit.do_creon_connect() # NOTE: always return True. 
+                    # connect = self.stInit.do_creon_connect() # NOTE: always return True. 
 
                     print('현재 시간 : %s' % (self.stUtils.현재_시간()))
                     if self.stUtils.장_중인지_확인() == True:
@@ -317,15 +359,19 @@ class Algorithm:
             else:                
 # 장 열림!
                 print('# [2] 장 열림!')
-                bTradeInit = self.stTrading.trade_init()
+                # sleep(30) # 바로 시작하면, 계쏙 "크레온 보안카드 비밀번호 입력" 요청 하는 듯?
+                bTradeInit = self.stTrading.do_trade_init()
                 if bTradeInit == False:
                     exit()
 # >> 어제 매수한 종목 있으면, 수익률(ex. 2%) 에 맞춰 매도 걸어놓음
 # >>> 매도 시, 가격 최소 단위? 맞춰서 매도 걸어야 함.;;
 
+
+                return connect # for DBG
+
+                
                 # 잔고 확인 (보유 주식)
                 주식_잔고_리스트 = self.stTrading.주식_잔고_조회(bPrint=False)
-
 
                 # 매수_목록_0218
                 # 매수_목록_0220 로 갈아끼우자,
@@ -387,7 +433,7 @@ class Algorithm:
                 if __bDBG == True:
                     __bBuyStock = True
                 # 0 원에 걸면? -> 바로 사지거나 팔릴 수 있음
-                __매수_타이밍 = 120 # 2 분 30 초 전,,
+                __매수_타이밍 = 240 # 2 분 30 초 전,,
                 while __bBuyStock == False:
                     __마감까지_남은시간 = self.stUtils.마감_까지_남은_시간().total_seconds()
                     __bBuyStock = (__마감까지_남은시간 <= __매수_타이밍) # 장 중이지 않을 경우, __마감까지_남은시간 는 음수
@@ -441,6 +487,15 @@ class Algorithm:
                     print(__투자_후보_이름[i])
                     __투자_후보_현재_정보_리스트.append(self.stStockInfo.getInfoDetail(__투자_후보_이름[i], bPrint=True)) # 출력되는 정보 순서 참고. 추후 dictionary 로 변경하면 좋을 듯,
                 
+                __매수_타이밍 = 60 # 1 분 0 초 전,,
+                while __bBuyStock == False:
+                    __마감까지_남은시간 = self.stUtils.마감_까지_남은_시간().total_seconds()
+                    __bBuyStock = (__마감까지_남은시간 <= __매수_타이밍) # 장 중이지 않을 경우, __마감까지_남은시간 는 음수
+                    # if __bDBG == True:
+                    #     __bBuyStock = True
+
+                    print('장 마감까지 %s 초 남음 (%s) (매수 타이밍: %s 초 전)' % (round(__마감까지_남은시간, 2), __bBuyStock, __매수_타이밍))
+                    sleep(2)
 # >> 매수 수행
                 if bTradeInit == True:
 # >>> (optional) 실시간 주가 subscribe
@@ -512,3 +567,38 @@ class Algorithm:
                 
 
 # [TEST] 장 열리기 전에 매수 걸어 놓으면 어떻게 되는지 확인
+
+
+
+
+    def test_algorithm(self):
+        __구매_주식명 = '큐브엔터'
+
+        if self.stInit.do_creon_forced_reconnect() == False:
+            exit()
+
+        if self.stTrading.do_trade_init() == False:
+            exit()
+
+        # def 주식_주문(self, 매매, stockName, 주문단가, 주문수량, 주문호가구분코드='01', bPrint=False, bTest=False):
+        __주문코드 = self.stTrading.주식_주문(
+            매매 = 2, # 매수
+            stockName = __구매_주식명,
+            주문단가 = 0,
+            주문수량 = 1,
+            주문호가구분코드='03',
+            bPrint=True,
+        )
+
+        __주문코드 = self.stTrading.주식_주문(
+            매매 = 1, # 매수
+            stockName = __구매_주식명,
+            주문단가 = 0,
+            주문수량 = 1,
+            주문호가구분코드='03',
+            bPrint=True,
+        )
+
+
+if __name__ == '__main__':
+    Algorithm().algorithm_4__buy_yesterday_low_price__sell_today_high_price()

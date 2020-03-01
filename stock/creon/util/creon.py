@@ -1,7 +1,7 @@
 import win32com.client
 import pythoncom
 
-import datetime #https://datascienceschool.net/view-notebook/465066ac92ef4da3b0aba32f76d9750a/
+import datetime # https://datascienceschool.net/view-notebook/465066ac92ef4da3b0aba32f76d9750a/
 import time
 
 from . import utils
@@ -57,13 +57,18 @@ class Trading:
         self.stockAccountFlag = ''
 
     # 거래 관련부 : init -> setinputvalue -> blockrequest
-    def trade_init(self):
+    def do_trade_init(self):
+        print('do_trade_init 1111111111111111')
         bInitResult = self.instCpTdUtil.TradeInit()
+        print('do_trade_init 2222222222222222')
+
         bReturn = False
         if bInitResult == 0:
             if self.logging == True:
                 print('[tradeInit] 성공')
             bReturn = True
+
+            print('do_trade_init 333333333333')
 
             self.stockAccount = self.instCpTdUtil.AccountNumber[0]
             self.stockAccountFlag = self.instCpTdUtil.GoodsList(self.stockAccount, self.상품관리구분코드['주식']) # ?

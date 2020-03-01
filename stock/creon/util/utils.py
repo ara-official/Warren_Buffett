@@ -1,10 +1,13 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
 import win32com.client
 import pythoncom
 from time import sleep
 import datetime
 
-from . import creon_0_Init
-
+from util import creon_0_Init
 
 class Utils:
     # 0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
