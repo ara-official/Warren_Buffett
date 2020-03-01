@@ -24,7 +24,6 @@ class Utils:
         '거래대금': 9,
         '누적체결매도수량': 10
     }
-
     def get_trade_price(self, aim_pr, 호가=0):
         price_gap = 0
         if aim_pr < 1000:
