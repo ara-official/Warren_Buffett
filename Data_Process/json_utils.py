@@ -1,12 +1,10 @@
-import json
-from collections import OrderedDict
 import os
-import sys
+import json
 
 def json_read(json_file_name, key):
     reletive_path=os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
     json_file_name=str(reletive_path)+'\\json\\'+json_file_name
-    print("[read] json file " + json_file_name)
+    # print("[read] json file " + json_file_name)
     
     with open(json_file_name, "r", encoding="utf-8") as json_file:
         json_data = json.load(json_file)
@@ -16,7 +14,7 @@ def json_write(json_file_name, key, value=""):
     
     reletive_path=os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
     json_file_name=str(reletive_path)+'\\json\\'+json_file_name
-    print("[write] json file " + json_file_name)
+    # print("[write] json file " + json_file_name)
     
     file_data = dict()
     file_data[key] = value

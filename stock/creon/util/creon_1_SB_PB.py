@@ -3,6 +3,18 @@
 
 import win32com.client
 
+import os
+import sys
+# creon_99_algorithm.py __main__ 으로 실행 하려면, path 를 일일이 추가 해야함..
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+
+
+from data_process import json_utils
+from data_process import log
+
+
 class CpEvent:
     def set_params(self, client, name, caller):
         self.client = client
@@ -38,29 +50,36 @@ class CpEvent:
                 # 이하 생략
             }
             __종목명 = self.client.GetHeaderValue(GetHeaderValue_param['종목명'])
+            __체결수량 = self.client.GetHeaderValue(GetHeaderValue_param['체결수량'])
+            __체결가격 = self.client.GetHeaderValue(GetHeaderValue_param['체결가격'])
             __매매구분 = self.client.GetHeaderValue(GetHeaderValue_param['매매구분코드'])
             __체결 = self.client.GetHeaderValue(GetHeaderValue_param['체결구분코드'])
             print(
-                '계좌명:', self.client.GetHeaderValue(GetHeaderValue_param['계좌명']),
-                '종목명:', self.client.GetHeaderValue(GetHeaderValue_param['종목명']),
-                '체결수량:', self.client.GetHeaderValue(GetHeaderValue_param['체결수량']),
-                '체결가격:', self.client.GetHeaderValue(GetHeaderValue_param['체결가격']),
+                # '계좌명:', self.client.GetHeaderValue(GetHeaderValue_param['계좌명']),
+                '종목명:', __종목명,
+                '체결수량:', __체결수량,
+                '체결가격:', __체결가격,
                 '주문번호:', self.client.GetHeaderValue(GetHeaderValue_param['주문번호']),
-                '계좌번호:', self.client.GetHeaderValue(GetHeaderValue_param['계좌번호']),
+                # '계좌번호:', self.client.GetHeaderValue(GetHeaderValue_param['계좌번호']),
                 '상품관리구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['상품관리구분코드']),
                 '종목코드:', self.client.GetHeaderValue(GetHeaderValue_param['종목코드']),
-                '매매구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['매매구분코드']),
-                '체결구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['체결구분코드']),
-                '신용대출구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['신용대출구분코드']),
+                '매매구분코드:', __매매구분,
+                '체결구분코드:', __체결,
+                # '신용대출구분코드:', self.client.GetHeaderValue(GetHeaderValue_param['신용대출구분코드']),
             )
 
             self.caller.complete = True # 체결
-            if (__매매구분 == 1) & (__체결 == 1): # 매도 성공
-                self.caller.sellCount+=1
-                print('[매도 성공] 종목명: %s, (count: %s)' % (__종목명, self.caller.sellCount))
-            if (__매매구분 == 2) & (__체결 == 1): # 매수 성공
-                self.caller.buyCount+=1
-                print('[매수 성공] 종목명: %s, (count: %s)' % (__종목명, self.caller.buyCount))
+
+            if (__매매구분 == '1') & (__체결 == '1'): # 매도 성공
+                self.caller.sellCount+=int(__체결수량)
+                __log = '[*** 매도 성공] 종목명: %s, 체결가격: %s, (count: %s)' % (__종목명, __체결가격, self.caller.sellCount)
+                print(__log)
+                log.log_write(__log)
+            if (__매매구분 == '2') & (__체결 == '1'): # 매수 성공
+                self.caller.buyCount+=int(__체결수량)
+                __log = '[*** 매수 성공] 종목명: %s, 체결가격: %s, (count: %s)' % (__종목명, __체결가격, self.caller.buyCount)
+                print(__log)
+                log.log_write(__log)
 
 
 class CpPublish:

@@ -1,13 +1,16 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
 import win32com.client
 import ctypes
 
-import os
 # from pywinauto import application # python 3.x 에서 사용 불가
 import subprocess
 
 from time import sleep
 
-from util import login
+from util import login #NOTE: need to change module location
 
 class Connection:
     def __init__(self, logging=False):
@@ -146,3 +149,7 @@ class Connection:
         self.log_msg += '[ret %s] ' % (ret)
 
         return ret
+
+if __name__ == '__main__':
+    # if Connection().is_creon_connected_as_admin() == False:
+    Connection().do_creon_forced_reconnect()

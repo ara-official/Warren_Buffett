@@ -1,7 +1,6 @@
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-print(os.path.abspath(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from stock.creon.trading_algo import creon_99_algorithm
 
@@ -26,7 +25,7 @@ if __name__ == '__main__':
         __cnt+=1
         creon_99_algorithm.Algorithm().algorithm_4__buy_yesterday_low_price__sell_today_high_price()
 
-        if __cnt >= 5:
+        if __cnt >= 10:
             break
     exit()
 
