@@ -10,7 +10,11 @@ import subprocess
 
 from time import sleep
 
+<<<<<<< Updated upstream
 from util import login #NOTE: need to change module location
+=======
+from util import login
+>>>>>>> Stashed changes
 
 class Connection:
     def __init__(self, logging=False):

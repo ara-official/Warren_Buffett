@@ -1,10 +1,14 @@
 import os
 import sys
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
 # creon_99_algorithm.py __main__ 으로 실행 하려면, path 를 일일이 추가 해야함..
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
+=======
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
 
 from time import sleep
 
@@ -15,12 +19,15 @@ from util import creon_0_Init
 from util import creon_1_SB_PB
 from util import creon_98_stocks_by_industry
 from util import login
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
 
 from data_process import json_utils
 from data_process import log
 
 from pythoncom import PumpWaitingMessages
 
+=======
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
 
 class Algorithm:
     매수_목록_0220_이전 = (
@@ -52,14 +59,20 @@ class Algorithm:
     )
 
     매수_목록_0227 = (
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
         # '스타모빌리티',
         # '한류AI센터',
+=======
+        '스타모빌리티',
+        '한류AI센터',
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
         # '아이씨디', # -3.49%
         # '국일제지', # -3.28%
         # '엘앤씨바이오'# -3.36%
     )
 
     매수_목록_0228 = (
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
         # '스타모빌리티', # 1
         # '한류AI센터', # 2
         # '두올산업',
@@ -85,6 +98,22 @@ class Algorithm:
 
     def __init__(self):
 
+=======
+        '스타모빌리티', # 1
+        '한류AI센터', # 2
+        '두올산업',
+        '셀리버리',
+        '대창솔루션',
+    )
+    
+    기존_매수_목록 = ()
+    기존_매수_목록 += 매수_목록_0220
+    # 기존_매수_목록 += 매수_목록_0224
+    # 기존_매수_목록 += 매수_목록_0226
+    기존_매수_목록 += 매수_목록_0227
+
+    def __init__(self):
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
         self.stInit = creon_0_Init.Connection()
 
         self.stUtils = utils.Utils()
@@ -320,6 +349,7 @@ class Algorithm:
 # >>> 모든 subscribe 해제
 # (처음으로 돌아가서 반복) <-- x
 
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
 
 ## 알고리즘 단순화
 # [1] 크레온 접속
@@ -330,8 +360,21 @@ class Algorithm:
 
     def algorithm_4__buy_yesterday_low_price__sell_today_high_price(self):
         __기대수익률 = 1.1 # %
+=======
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
 
-        __bDBG = False
+## 알고리즘 단순화
+# [1] 크레온 접속
+# [2] 어제 종가 종목            => 오늘 고가 매도
+# [3] 종목 추천 알고리즘 수행
+# [4] 어제 종가 종목 (매도 실패) => 오늘 종가 매도
+# [5] 추천된 종목               => 오늘 종가 구매
+
+    def algorithm_4__buy_yesterday_low_price__sell_today_high_price(self):
+##########
+        __기대수익률 = 1.1 # %
+
+        __bDBG = True
 
         __bExit = False
         __bIsStockMarketOpen = False
@@ -350,7 +393,13 @@ class Algorithm:
             print('******************************************!!!!!!')
 # 장 중인지 확인
             __bIsStockMarketOpen = self.stUtils.장_중인지_확인()
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
             connect = self.stInit.is_creon_connected_as_admin() # NOTE: always return True.
+=======
+            connect = self.stInit.do_creon_forced_reconnect() # NOTE: always return True.
+            # creon_0_Init.Connection().kill_creon()
+            # connect = creon_0_Init.Connection().run_creon(login.id, login.pwd, login.pwdcert) 
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
             if __bDBG == True:
                 __bIsStockMarketOpen = True
                 print('__bIsStockMarketOpen: %s, connect: %s' % (__bIsStockMarketOpen, connect))
@@ -376,13 +425,20 @@ class Algorithm:
 # >> 어제 매수한 종목 있으면, 수익률(ex. 2%) 에 맞춰 매도 걸어놓음
 # >>> 매도 시, 가격 최소 단위? 맞춰서 매도 걸어야 함.;;
 
+
+                return connect # for DBG
+
+                
                 # 잔고 확인 (보유 주식)
                 주식_잔고_리스트 = self.stTrading.주식_잔고_조회(bPrint=False)
 
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
                 #NOTE: *.json 에서 구매 목록 가져오도록 수정 필요
                 # json_utils.json_write('purchase_list_0301.json', 'test', Algorithm.current_purchase_stock_list)
                 # test = json_utils.json_read('purchase_list_0301.json', 'test')
 
+=======
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
                 # 매수_목록_0218
                 # 매수_목록_0220 로 갈아끼우자,
                 # 매도 <-- 어제 매수한 종목에 대한 매도 주문
@@ -507,10 +563,15 @@ class Algorithm:
                     # if __bDBG == True:
                     #     __bBuyStock = True
 
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
                     __log = '장 마감까지 %s 초 남음 (%s) (매수 타이밍: %s 초 전)' % (round(__마감까지_남은시간, 2), __bBuyStock, __매수_타이밍)
                     print(__log)
                     # log.log_write(__log)
                     sleep(5)
+=======
+                    print('장 마감까지 %s 초 남음 (%s) (매수 타이밍: %s 초 전)' % (round(__마감까지_남은시간, 2), __bBuyStock, __매수_타이밍))
+                    sleep(2)
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
 # >> 매수 수행
                 if bTradeInit == True:
 # >>> (optional) 실시간 주가 subscribe
@@ -584,6 +645,7 @@ class Algorithm:
                 
 
 # [TEST] 장 열리기 전에 매수 걸어 놓으면 어떻게 되는지 확인
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
     def test_algorithm(self):
         __구매_주식_1 = '큐브엔터'
         __구매_주식_2 = 'SM C&C'
@@ -607,10 +669,30 @@ class Algorithm:
         __주문코드 = self.stTrading.주식_주문(
             매매 = 1, # 1: 매도, 2: 매수
             stockName = __구매_주식_1,
+=======
+
+
+
+
+    def test_algorithm(self):
+        __구매_주식명 = '큐브엔터'
+
+        if self.stInit.do_creon_forced_reconnect() == False:
+            exit()
+
+        if self.stTrading.do_trade_init() == False:
+            exit()
+
+        # def 주식_주문(self, 매매, stockName, 주문단가, 주문수량, 주문호가구분코드='01', bPrint=False, bTest=False):
+        __주문코드 = self.stTrading.주식_주문(
+            매매 = 2, # 매수
+            stockName = __구매_주식명,
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py
             주문단가 = 0,
             주문수량 = 1,
             주문호가구분코드='03',
             bPrint=True,
+<<<<<<< Updated upstream:stock/creon/trading_algo/creon_99_algorithm.py
             bTest=False,
         )
         __item = {}
@@ -664,3 +746,19 @@ if __name__ == '__main__':
     # Algorithm().algorithm_4__buy_yesterday_low_price__sell_today_high_price()
 
     Algorithm().test_algorithm()
+=======
+        )
+
+        __주문코드 = self.stTrading.주식_주문(
+            매매 = 1, # 매수
+            stockName = __구매_주식명,
+            주문단가 = 0,
+            주문수량 = 1,
+            주문호가구분코드='03',
+            bPrint=True,
+        )
+
+
+if __name__ == '__main__':
+    Algorithm().algorithm_4__buy_yesterday_low_price__sell_today_high_price()
+>>>>>>> Stashed changes:stock/creon/util/creon_99_algorithm.py

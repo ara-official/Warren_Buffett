@@ -68,6 +68,8 @@ class Trading:
                 print('[tradeInit] 성공')
             bReturn = True
 
+            print('do_trade_init 333333333333')
+
             self.stockAccount = self.instCpTdUtil.AccountNumber[0]
             self.stockAccountFlag = self.instCpTdUtil.GoodsList(self.stockAccount, self.상품관리구분코드['주식']) # ?
             print('self.stockAccount', self.stockAccount, 'self.stockAccountFlag', self.stockAccountFlag)

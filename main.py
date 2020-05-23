@@ -1,5 +1,6 @@
 import os
 import sys
+<<<<<<< Updated upstream
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from stock.creon.trading_algo import creon_99_algorithm
@@ -7,6 +8,14 @@ from stock.creon.trading_algo import creon_99_algorithm
 from stock.creon.util import utils
 
 
+=======
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from stock.creon.util import creon_99_algorithm
+
+from stock.creon.util import utils
+
+>>>>>>> Stashed changes
 # for test
 from stock.creon.util import creon_0_Init
 from stock.creon.util import creon
@@ -19,6 +28,7 @@ if __name__ == '__main__':
     print('111111111111111111111111111111111111111111111111111111111111111111')
     print('111111111111111111111111111111111111111111111111111111111111111111')
     # os.system('python C:\\Users\\SMS\\Desktop\\PROGRAMMING\\Warren_Buffett\\stock\\creon\\util\\creon_99_algorithm.py')
+<<<<<<< Updated upstream
 
     __cnt = 0
     while True:
@@ -26,6 +36,15 @@ if __name__ == '__main__':
         creon_99_algorithm.Algorithm().algorithm_4__buy_yesterday_low_price__sell_today_high_price()
 
         if __cnt >= 10:
+=======
+
+    __cnt = 0
+    while True:
+        __cnt+=1
+        creon_99_algorithm.Algorithm().algorithm_4__buy_yesterday_low_price__sell_today_high_price()
+
+        if __cnt >= 5:
+>>>>>>> Stashed changes
             break
     exit()
 
