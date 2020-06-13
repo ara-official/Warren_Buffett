@@ -1,0 +1,1 @@
+:: tor 설치 : https://www.torproject.org/download/

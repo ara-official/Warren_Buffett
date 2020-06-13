@@ -1,3 +1,5 @@
+# refac item : 각 종목별로 조회 1번만 해서 필요한 data 다 글어오도록 수정 필요. 현재는 함수 별로 각자가 조회함;;
+
 import os
 import sys
 
@@ -6,17 +8,26 @@ dir_split = dir.split('\\')
 cur_dir_depth = 2 # TODO: (minsik.son) 이 값도 자동으로 넣도록 수정 필요함.
 len = len(dir_split) - cur_dir_depth
 root_dir = "\\".join(dir_split[0:len])
-print(dir_split)
-print(root_dir)
+# print(dir_split)
+# print(root_dir)
 sys.path.append(root_dir)
 
 from stock.creon.util import creon_0_Init
 from stock.creon.util import creon
 from stock.creon.util import creon_98_stocks_by_industry
 
+from web_crawling import crawling_stock
+
+from data_process import file_inout
+from stock.creon.util import utils
+import re
+
 class Quant_Utils:
     def __init__(self):
-        pass
+        self.crawling_stock_info = crawling_stock.Crawling_Stock_Info()
+
+    def get_crawler(self):
+        return self.crawling_stock_info
     def cal__CAGR(self): # Compund Annual Groth Rate
         pass
     def MDD(self): # Maximum Draw Down
@@ -25,15 +36,23 @@ class Quant_Utils:
         print('get_intrinsic_value: %s' % (stock_name))
         # intrinsic_value = BPS + EPS * 10 ; (Book-value Per Stock) + (Earnings Per Stock * 10)
         pass
-    def NCAV(self, stock_name): 
+    def NCAV(self, stock_name, bCrawling=False): 
         # Net Current Asset Value. 순유동자산
         # (유동자산 - 총부채) > (시가총액 * 1.5)
-        유동자산 = self.get_CURRENT_ASSET(stock_name)
+        유동자산 = self.get_CURRENT_ASSET(stock_name, bCrawling=bCrawling)
         총부채 = self.get_TOTAL_DEBT(stock_name)
+        # 총부채 = 1111
         시가총액 = self.get_MARKET_CAPITALIZATION(stock_name)
-        print('(유동자산 - 총부채) > (시가총액 * 1.5)')
-        print('= (%s - %s) > (%s * 1.5)' % (유동자산, 총부채, 시가총액))
-        print('= (%s) > (%s)' % (format(유동자산 - 총부채, ','), format(시가총액 * 1.5, ',')))
+        # 시가총액 = 2222
+        print_1 = '(유동자산 - 총부채) > (시가총액 * 1.5)'
+        print(print_1)
+        file_inout.write_to_file(path=path, data=print_1, option='a')
+        print_2 = '= (%s - %s) > (%s * 1.5)' % (유동자산, 총부채, 시가총액)
+        print(print_2)
+        file_inout.write_to_file(path=path, data=print_2, option='a')
+        print_3 = '= (%s) > (%s)' % (format(유동자산 - 총부채, ','), format(시가총액 * 1.5, ','))
+        print(print_3)
+        file_inout.write_to_file(path=path, data=print_3, option='a')
         bBuy = (유동자산 - 총부채) > (시가총액 * 1.5)
         
         # 세후이익 계산도 필요
@@ -41,7 +60,12 @@ class Quant_Utils:
         
         return bBuy
 
-    def get_CURRENT_ASSET(self, stock_name): # 유동자산 ?
+    def get_CURRENT_ASSET(self, stock_name, bCrawling=False): # 유동자산 ?
+        if bCrawling == True:
+            stock_code = utils.Utils().get_code_from_name(stock_name)
+            유동자산 = self.crawling_stock_info.get_CURRENT_ASSET(stock_name, stock_code[1:7])
+            return 유동자산
+
         유동자산 = 0
         stStockInfo = creon.StockInfo()
         # investing.com 기준 유동자산
@@ -72,7 +96,7 @@ class Quant_Utils:
             creon.StockInfo.자본금_71,
             creon.StockInfo.유보율_76  # (잉여금/납입자본금) x 100%
         )
-        info_list = stStockInfo.getInfoDetail(stock_name, request_type_list)
+        info_list = stStockInfo.getInfo(stock_name, request_type_list)
 
         print('  유보율: %s %%' % (info_list[1]))
 
@@ -144,6 +168,18 @@ class Quant_Utils:
         print('시가총액: %s' % (format(시가총액, ',')))
         return 시가총액
 
+    def get_NET_INCOME(self, stock_name, bPrint=False):
+        stStockInfo = creon.StockInfo()
+        request_type_list = (
+            creon.StockInfo.당기순이익_88,
+            creon.StockInfo.분기당기순이익_104,
+        )
+
+        info_list = stStockInfo.getInfo(stock_name, request_type_list)
+        당기순이익 = info_list[0]
+        분기당기순이익 = info_list[1]
+        return 당기순이익, 분기당기순이익
+
 # NOTE: (minsik.son) for test
 if __name__ == "__main__":
     # creon_0_Init.Connection().do_creon_forced_reconnect()
@@ -154,20 +190,74 @@ if __name__ == "__main__":
         print('[CREON] already connected~')
     util = Quant_Utils()
 
-    stock_list = (
-        '삼성전자',
-        'SK하이닉스',
-        'CJ',
-        '셀트리온',
-        '금강공업',
-        '아시아나항공',
-        'NHN',
-        '마니커'
-    )
+    # NOTE: crawling 하기 전에 tor browser 를 실행하세요.
+    util.get_crawler().get_crwaler().move_to_url('https://check.torproject.org/')
+    util.get_crawler().get_crwaler().sleep(3)
+
+    # util.get_crawler().loging_investing()
+    # util.get_crawler().get_crwaler().sleep(3)
+
+    # stock_list = (
+    #     '삼성전자',
+    #     'SK하이닉스',
+    #     'CJ',
+    #     '셀트리온',
+    #     '금강공업',
+    #     '아시아나항공',
+    #     'NHN',
+    #     '마니커'
+    # )
+    bListIsCode = True
+    # stock_list = (
+    #     # '메리츠화재',
+    #     # '경방',
+    #     '유수홀딩스',
+    #     '동화약품',
+    # 
+
+    __marketType = creon_98_stocks_by_industry.StocksByIndustry.MARKET['코스피']
+    stock_list = creon_98_stocks_by_industry.StocksByIndustry().getStockListByMarket(__marketType)
+    __marketType = creon_98_stocks_by_industry.StocksByIndustry.MARKET['코스닥']
+    stock_list += creon_98_stocks_by_industry.StocksByIndustry().getStockListByMarket(__marketType)
+
     print(stock_list)
+
+    path='./test.txt'
+    count = 0
+    stock_name = ''
+    stock_code = ''
+    sleep_count = 0
     for i in stock_list:
-        stock_name = i
-        print('이름: %s' % (stock_name))
-        구매여부 = util.NCAV(stock_name)
-        print('구매여부: %s' % (구매여부))
-        print('----------------------------')
+        count += 1
+        if count < 34: # <- 이 번호? 부터 crawling
+            continue
+
+        sleep_count += 1
+
+        if sleep_count == 6:
+            util.get_crawler().get_crwaler().sleep(30)
+            sleep_count = 0
+
+        if bListIsCode == True:
+            stock_name = utils.Utils().get_name_from_code(i)
+            stock_code = i
+        else:
+            stock_name = i
+            stock_code = utils.Utils().get_code_from_name(i)
+
+        print_1 = '[%s] 이름: %s, 코드: %s' % (count, stock_name, stock_code)
+        print(print_1)
+        file_inout.write_to_file(path=path, data=print_1, option='a')
+
+        구매여부 = util.NCAV(stock_name, bCrawling=True)
+        print_2 = '구매여부: %s' % (구매여부)
+        print(print_2)
+        file_inout.write_to_file(path=path, data=print_2, option='a')
+
+        당기순이익, 분기당기순이익 = util.get_NET_INCOME(stock_name)
+        print_3 = '당기순이익: %s, 분기당기순이익: %s' % (format(당기순이익, ','), format(분기당기순이익, ','))
+        file_inout.write_to_file(path=path, data=print_3, option='a')
+
+        print_4 = '=============================================================='
+        print(print_4)
+        file_inout.write_to_file(path=path, data=print_4, option='a')
