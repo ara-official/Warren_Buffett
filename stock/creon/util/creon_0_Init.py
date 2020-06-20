@@ -20,14 +20,18 @@ class Connection:
         self.log_msg = ''
 
     def print_log_msg(self):
-        print(self.log_msg)
+        if self.logging == True:
+            print(self.log_msg)
         self.log_msg = ''
 
-    def do_creon_forced_reconnect(self):
+    def do_creon_forced_reconnect(self, id=None, pwd=None, pwdcert=None):
         print('[do_creon_forced_reconnect]')
         self.kill_creon()
-        connect = self.run_creon(login.id, login.pwd, login.pwdcert)
-        
+        if id == None:
+            connect = self.run_creon(login.id, login.pwd, login.pwdcert)
+        else:
+            connect = self.run_creon(id, pwd, pwdcert)
+
         return connect
 
     def kill_creon(self):

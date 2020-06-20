@@ -15,7 +15,7 @@ from web_crawling.utils import randmized_sleep
 
 class Browser :
 
-    def __init__(self, has_screen = False) : # 전혀 모르겠다.
+    def __init__(self, has_screen = False, bUseProxy = False) : # 전혀 모르겠다.
         dir_path = os.path.dirname(os.path.realpath(__file__)) # __file__ means this file's 
         print("[Browser] dir_path : " + dir_path)
         service_args = ["--ignore-ssl-errors=true"]
@@ -30,8 +30,13 @@ class Browser :
         chrome_options.add_argument("--no-sandbox")
         
         # proxy
-        chrome_options.add_argument("--proxy-server=socks5://127.0.0.1:9150")
-
+        if bUseProxy == True:
+            chrome_options.add_argument("--proxy-server=socks5://127.0.0.1:9150")
+            
+        # user agent
+        # chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit 537.36 (KHTML, like Gecko) Chrome")
+        chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko")
+    
         self.driver = webdriver.Chrome(
             # executable_path="%s/chromedrivers/chromedriver_win_79.exe" % dir_path,
             executable_path="%s/chromedrivers/chromedriver_win_83.exe" % dir_path,

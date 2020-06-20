@@ -32,8 +32,8 @@ class WebsiteCrawler (Crawler) :
     GOOGLE_URL = 'https://www.google.com/'
     XPATH_GOOGLE_INPUT = 'input[title="검색"]'
     XPATH_GOOGLE_SEARCH_BTN = "/html/body/div/div[4]/form/div[2]/div[1]/div[3]/center/input[1]"
-    def __init__(self, skip_screen=False) :
-        self.browser = Browser(skip_screen)
+    def __init__(self, skip_screen=False, bUseProxy=False) :
+        self.browser = Browser(skip_screen, bUseProxy=bUseProxy)
         # self.browser.get("https://www.google.com")
 
     def get_browser(self):

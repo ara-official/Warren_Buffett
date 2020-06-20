@@ -10,8 +10,8 @@ dir_split = dir.split('\\')
 cur_dir_depth = 2 # TODO: (minsik.son) 이 값도 자동으로 넣도록 수정 필요함.
 len = len(dir_split) - cur_dir_depth
 root_dir = "\\".join(dir_split[0:len])
-print(dir_split)
-print(root_dir)
+# print(dir_split)
+# print(root_dir)
 sys.path.append(root_dir)
 
 ####################################################

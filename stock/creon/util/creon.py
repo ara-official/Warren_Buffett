@@ -270,6 +270,7 @@ class Trading:
         # self.instCpTdNew9061
 
 class StockInfo:
+    종목코드_0 = 0
     현재가_4 = 4 
     고가_6 = 6
     매수호가_9 = 9

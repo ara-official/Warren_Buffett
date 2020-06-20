@@ -15,8 +15,8 @@ from web_crawling.webcrawler import crawler
 import web_crawling.login as login
 
 class Crawling_Stock_Info:
-    def __init__(self):
-        self.websiteCrawler = crawler.WebsiteCrawler(skip_screen=False)
+    def __init__(self, skip_screen=False, bUseProxy=False):
+        self.websiteCrawler = crawler.WebsiteCrawler(skip_screen=skip_screen, bUseProxy=bUseProxy)
 
     def get_crwaler(self):
         return self.websiteCrawler
@@ -114,7 +114,9 @@ class Crawling_Stock_Info:
                     bRetry = True
                 else:
                     print('343434343434343434343434343434 - 3')
-
+                    if 유동자산 == '-':
+                        print('유동자산:%s' % (유동자산))
+                        return 0
                     유동자산 = float(유동자산) * 1000000
                     print('유동자산:%s' % (유동자산))
                     return 유동자산
@@ -151,6 +153,9 @@ class Crawling_Stock_Info:
         유동자산 = self.websiteCrawler.get_data_by_xpath(유동자산_xpath)
         if 유동자산 == None:
             print('55555555555555555555555555')
+            return 0
+        if 유동자산 == '-':
+            print('유동자산:%s' % (유동자산))
             return 0
         유동자산 = float(유동자산) * 1000000
         print('유동자산:%s' % (유동자산))
