@@ -349,16 +349,23 @@ class StockInfo:
         # print('requestType : %s' % (requestType))
         self.instMarketEye.SetInputValue(필드_요청타입, requestType)
         주식코드 = self.stUtils.get_code_from_name(stockName)
+
+        ret_value = []
+
+        if 주식코드 == "": # NOTE: exception case
+            print("-sn 파라미터 입력이 잘못 되었습니다. (존재하지 않는 종목명)")
+            exit()
+
         self.instMarketEye.SetInputValue(필드_주식코드, 주식코드)
 
         self.instMarketEye.BlockRequest() # 서버에 데이터 요청
 
-        ret_value = []
         if type(requestType) == int:
             ret_value.append(self.instMarketEye.GetDataValue(0, 0))
         else :
             for i in range(len(requestType)):
-                ret_value.append(self.instMarketEye.GetDataValue(i, 0))
+                value = self.instMarketEye.GetDataValue(i, 0)
+                ret_value.append(value)
 
         return ret_value
 

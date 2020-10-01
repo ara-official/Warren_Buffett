@@ -8,8 +8,8 @@ import sys
 dir = os.getcwd()
 dir_split = dir.split('\\')
 cur_dir_depth = 2 # TODO: (minsik.son) 이 값도 자동으로 넣도록 수정 필요함.
-len = len(dir_split) - cur_dir_depth
-root_dir = "\\".join(dir_split[0:len])
+__len = len(dir_split) - cur_dir_depth
+root_dir = "\\".join(dir_split[0:__len])
 # print(dir_split)
 # print(root_dir)
 sys.path.append(root_dir)
@@ -64,6 +64,8 @@ class Utils:
     def __init__(self):
         self.종목_코드 = 0
         self.조회방법 = 1
+        self.요청종료일 = 2
+        self.요청시작일 = 3
         self.요청_개수 = 4
         self.요청할_데이터의_종류 = 5
         self.차트의_종류 = 6
@@ -92,12 +94,17 @@ class Utils:
             nameList.append(self.get_name_from_code(codeList[i]))
 
         return nameList
-
     def set_stock_chart_info_and_request(self, 종목코드, 조회방법, 요청기간_또는_요청일수, 요청할_데이터_종류=(0, 1, 2, 3, 4, 5, 6, 8, 9, 10), 차트종류=ord('D'), 수정주가반영여부=ord('1')):
         self.instStockChart.SetInputValue(self.종목_코드, 종목코드)
         self.instStockChart.SetInputValue(
             self.조회방법, 조회방법)  # 1: 조회 기간, 2: 조회 개수
-        self.instStockChart.SetInputValue(self.요청_개수, 요청기간_또는_요청일수)
+        if 조회방법 == ord('1'):
+            self.instStockChart.SetInputValue(self.요청종료일, int(요청기간_또는_요청일수))
+            self.instStockChart.SetInputValue(self.요청시작일, int(요청기간_또는_요청일수))
+        elif 조회방법 == ord('2'):
+            self.instStockChart.SetInputValue(self.요청_개수, 1)
+        else:
+            print("set_stock_chart_info_and_request() ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         # self.instStockChart.SetInputValue(__dataType, 5) # 5: 종가
         # 0: 날짜, 1: 시간, 2: 시가, 3: 고가, 4: 저가, 5: 종가, 6: 전일대비, 8: 거래량, 9: 거래대금, 10: 누적체결매도수량
         self.instStockChart.SetInputValue(self.요청할_데이터의_종류, 요청할_데이터_종류)
@@ -106,6 +113,28 @@ class Utils:
 
         self.instStockChart.BlockRequest()  # request data from the server
 
+    
+    def get_stock_value_specific_day(self, stockCode, date, bPrint=False):
+        if bPrint == True:
+            print('code : %s, name : %s' %
+                  (stockCode, self.get_name_from_code(stockCode)))
+        __dataTypeList = (0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 13, 18, 19, 26) # 2: 시가, 13: 시가총액 18: 상장주식수, 19: 자본금
+        self.set_stock_chart_info_and_request(stockCode, ord('1'), date, __dataTypeList, ord('D'), ord('1'))
+
+        __numData = self.instStockChart.GetHeaderValue(3)  # response. receive data from the server
+        if bPrint == True:
+            print('numData : %s' % __numData)
+
+        __stockValueList = []
+        for i in range(__numData):
+            __stockValue = []
+            for j in range(len(__dataTypeList)):
+                __stockValue.append(self.instStockChart.GetDataValue(j, i))
+            if bPrint == True:
+                print('%s' % __stockValue)
+            __stockValueList.append(__stockValue)
+
+        return __stockValueList
     # https://wikidocs.net/3684
     def get_stock_value_n_days(self, stockCode, days, bPrint=False):
         if bPrint == True:
