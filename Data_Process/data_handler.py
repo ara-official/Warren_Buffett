@@ -19,6 +19,8 @@ sys.path.append(root_dir)
 def get_유동자산_리스트(year=0, month=0, day=0, bPrint=False):
     if bPrint == True:
         print("year:", year)
+    year = int(year)
+    month = int(month)
     # NOTE: test 용으로 1분기 데이터만 이용.
     __분기 = 0
     if (1 <= month) & (month <= 3):
@@ -35,23 +37,24 @@ def get_유동자산_리스트(year=0, month=0, day=0, bPrint=False):
     # [1] open file
     file_path = ""
     if year == 0:
-        file_path = root_dir + "\\data\\raw_data\\2020_1분기보고서_01_재무상태표_연결_20200808.txt"
+        file_path = root_dir + "/data/raw_data/2020_1분기보고서_01_재무상태표_연결_20200808.txt"
     elif year == 2020:
         if __분기 == 2:
-            file_path = root_dir + "\\data\\raw_data\\2020_1분기보고서_01_재무상태표_연결_20200613.txt"
+            file_path = root_dir + "/data/raw_data/2020_1분기보고서_01_재무상태표_연결_20200613.txt"
         else:
-            file_path = root_dir + "\\data\\raw_data\\2020_1분기보고서_01_재무상태표_연결_20200808.txt"
+            file_path = root_dir + "/data/raw_data/2020_1분기보고서_01_재무상태표_연결_20200808.txt"
     elif year == 2019:
-        file_path = root_dir + "\\data\\raw_data\\2019_1분기보고서_01_재무상태표_연결_20200516.txt"
+        file_path = root_dir + "/data/raw_data/2019_1분기보고서_01_재무상태표_연결_20200516.txt"
     elif year == 2018:
-        file_path = root_dir + "\\data\\raw_data\\2018_1분기보고서_01_재무상태표_연결_20200404.txt"
+        file_path = root_dir + "/data/raw_data/2018_1분기보고서_01_재무상태표_연결_20200404.txt"
     elif year == 2017:
-        file_path = root_dir + "\\data\\raw_data\\2017_1분기보고서_01_재무상태표_연결_20191113.txt"
+        file_path = root_dir + "/data/raw_data/2017_1분기보고서_01_재무상태표_연결_20191113.txt"
     elif year == 2016:
-        file_path = root_dir + "\\data\\raw_data\\2016_1분기보고서_01_재무상태표_연결_20190418.txt"
+        file_path = root_dir + "/data/raw_data/2016_1분기보고서_01_재무상태표_연결_20190418.txt"
         
-        # file_path = root_dir + "\\data\\processed_data\\2020_1분기보고서_01_재무상태표_20200613.txt"
+        # file_path = root_dir + "/data/processed_data/2020_1분기보고서_01_재무상태표_20200613.txt"
 
+    print("file_path:", file_path)
     file = open(file=file_path, mode='rt', encoding="utf-8")
 
     # [2] read first line
