@@ -1,3 +1,5 @@
+# [종목 조회 속도 개선] CREON 대신에, krx 와 opendart 를 통해 필요한 값 가져오도록 수정
+
 # 그레이엄의 마지막 선물
 from data_process import data_handler, file_inout
 
