@@ -1,0 +1,24 @@
+
+th{
+    text-align: center;
+}
+
+td{
+    text-align: right;
+}
+
+td.index{
+    text-align: center;
+}
+td.stock_name{
+    text-align: center;
+}
+td.buy_or_not{
+    text-align: center;
+}
+td.calculation{
+    text-align: left;
+}
+td.weight{
+    text-align: center;
+}
