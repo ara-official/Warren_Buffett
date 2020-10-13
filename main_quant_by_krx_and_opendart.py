@@ -96,6 +96,8 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
         # json = {"date":date, "list":json_list}
         file_inout.write_to_file(path=path, data=json.dumps(json_dict, ensure_ascii=False, indent="\t"), option='w')
     
+        # add to list.txt
+        file_inout.write_to_file(path="./json/list.txt", data="\n"+output_json_file_name, option='a')
 
 if __name__ == "__main__":
     YEAR = "2020"

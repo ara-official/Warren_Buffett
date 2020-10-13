@@ -1,4 +1,18 @@
-
+h1{
+    position: fixed;
+    left:20px;
+    color:white;
+    background-color: burlywood;
+}
+h3{
+    position: fixed;
+    left:20px;
+    top: 50px;
+    background-color: white;
+}
+.container{
+    padding-top: 100px;
+}
 th{
     text-align: center;
 }

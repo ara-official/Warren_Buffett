@@ -1,40 +1,42 @@
-// import * as NCAV from "file:///Users/sonminsik/Desktop/PROGRAMMING/Warren_Buffett/json/purchase_list_0301.json"
-let path = window.location.pathname;
-let split_path = path.split("/");
-let json_path = ""
-
 let gJsonData = null;
-
-// console.log(path)
-for(let i = 0; i < split_path.length - 2; i++)
-{
-    json_path += split_path[i] + "/"
-    // console.log(json_path)
-}
-// json_path += "json/202010111630_NCAV.json"
-json_path += "json/202010120158_NCAV.json"
+let gFileList = "";
 
 // window.onload = function ()
 $(document).ready(function ()
 {
-    console.log("start")
+    console.log("["+arguments.callee.name+"] START");
 
     // path = "file://" + json_path
     // console.log(path)
+    ajax_load_list()
 
-    ajax()
+    ajax_load_data("202010140009_NCAV")
 
-    console.log("end")
+    console.log("["+arguments.callee.name+"] END");
 })
 
 
-function ajax()
+function ajax_load_list()
+{
+    $.ajax({
+        url: "../json/list.txt",
+        type: "GET",
+        async: true,
+        dataType: "text",
+        success: function(data){display_select_box(data)},
+        error: function(jqXHR, textStatus, errorThrown){console.log("jqXHR: " + jqXHR + ", textStatus: " + textStatus)}
+    });
+}
+
+function ajax_load_data(file_name)
 {
     $.ajax({
         // url: 'file:///Users/sonminsik/Desktop/PROGRAMMING/Warren_Buffett/json/202010111651_NCAV.json',
         // url: "http://127.0.0.1:8081/json/202010111651_NCAV.json",
         // url: "../json/202010120158_NCAV.json",
-        url: "../json/202010130035_NCAV.json",
+        // url: "../json/202010130035_NCAV.json",
+        url: "../json/" + file_name + ".json",
+        
         type: "GET",
         async: true,
         // dataType: "json",
@@ -51,18 +53,41 @@ function ajax()
 
         display_json_data(gJsonData);
 
-        console.log("["+arguments.callee.name+"] START");
+        console.log("["+arguments.callee.name+"] END");
     })
     .fail(function(jqXHR, textStatus, errorThrown){
         console.log("jqXHR: " + jqXHR + ", textStatus: " + textStatus)
-    })
+    });
+}
+
+function display_select_box(list)
+{
+    gFileList = list.split("\n");
+
+    for (let i = 0; i < gFileList.length; i++)
+    {
+        let draw = "<option value=\"" + gFileList[i].split(".")[0] + "\">" + gFileList[i] + "</option>";
+
+        $("#select_1").append(draw)
+    }
+}
+
+function change_select_box()
+{
+    console.log("["+arguments.callee.name+"] START");
+
+    let select_value = $("#select_1 option:selected").val();
+    console.log("select_value: " + select_value);
+
+    ajax_load_data(select_value);
+
+    console.log("["+arguments.callee.name+"] END");
 }
 
 
 function display_json_data(json_data)
 {
-    // $("#date").text("날짜: " + json_data["date"])
-    $("#h_1").text(json_data["date"] + " 추천 종목");
+    // $("#h3_1").html(json_data["date"] + " 추천 종목");
 
     $("#main_table").empty();
 
