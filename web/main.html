@@ -1,28 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>hello🎾🎹</title>
+    <title>🚀즐추⌚️</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="main.css?ver=20201017-43">
 </head>
 <body>
-    <h1>Simple Quantitative - 주식 종목 추천편</h1>
-    <h3>
-        <select id="select_1" name="date" onchange="change_select_box()"></select>
-    </h3>
-
-    <!-- <div id="date">?</div> -->
-    <div class="container">
-        <table class="table table-striped table-hover" id="main_table">
-            <tr>
-                <td>내가</td>
-                <td>사라져볼게~</td>
-            </tr>
-        </table>
+    <h1>/'즐'거운 '추'천/ Simple Quantitative - 주식 종목 추천편</h1>
+    <h4>
+        용어
+    </h4>
+    <p id="div_1">
+        <h6>NCAV</h6>
+        <p class="desc">
+            Net Current Asset Value(순유동자산). 벤저민 그레이엄 옹? 의 전략으로 유명. 청산가치>시가총액 이면서 흑자인 기업에 투자하는 전략이다. 조건에 부합하는 종목 20~30 정도를 매수하게 된다. 그러나 종목이 몇 개 없다면, 1개 기업에 내 자산의 최대 10% 만 투자하는 전략임.
+        </p>
+        <h6>당기순이익</h6>
+        <p class="desc">
+            net income. 회사가 실제로 순수하게 남긴 이익.
+        </p>
+        <h6>DIV</h6>
+        <p class="desc">
+            Dividend Yield. 배당수익률
+        </p>
+        <h6>BPS</h6>
+        <p class="desc">
+            Book-Per Share. 1 주 당 장부가
+        </p>
+        <h6>PER</h6>
+        <p class="desc">
+            Price Earning Ratio. 1 주 당 얻는 수익을 비율로 나타냄. PER * EPS = 1 주 가격
+        </p>
+        <h6>EPS</h6>
+        <p class="desc">
+            Earning Per Share. 1 주 당 수익금.
+        </p>
+        <h6>PBR</h6>
+        <p class="desc">
+            Price Book Ratio. 장부가 대비 1주 가격을 비율로 나타냄
+        </p>
+    </p>
+    <h4>
+        추천종목 DATE: <select id="select_json" name="date" onchange="change_select_box()"></select>
+        // 202010180335 까지는 당기순이익이 포함되지 않았기 때문에, 참고로만 사용하자.
+    </h4>
+    <div id="div_2">
+        <div>
+            <select id="select_PER" name="per"></select> PER
+        </div>
+        <div>
+            <select id="select_WEIGHT" name="weight"></select> WEIGHT
+        </div>
+        <div>
+            <select id="check_NET_INCOME" name="net_income"></select> CHECK_NET_INCOME
+        </div>
+        <div id="ratio">
+            RATIO = (유동자산 - 부채총계) / (시가총액 * 가중치)
+        </div>
+        <!-- <div id="date">?</div> -->
+        <div class="container" id="main">
+            <table class="table table-striped table-hover" id="main_table">
+                <tr>
+                    <td>내가</td>
+                    <td>사라져볼게~</td>
+                </tr>
+            </table>
+        </div>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="main.js?ver=20201022-9"></script>
 </body>
 </html>

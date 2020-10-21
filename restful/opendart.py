@@ -1,11 +1,13 @@
+# NOTE: opendart 는 하루 10,000 회 조회 제한이 있습니다.
 import datetime
 
 import requests
 from ast import literal_eval # parse, string to dictionray
 
+# from crtfc_key import CRTFC_KEY
+# from parse_xml import get_corp_code_by_corp_name
 from restful.crtfc_key import CRTFC_KEY
 from restful.parse_xml import get_corp_code_by_corp_name
-
 API_HOST = "https://opendart.fss.or.kr/api/"
 
 # 상장기업 재무정보
@@ -96,6 +98,7 @@ if __name__ == "__main__":
     CORP_NAME = "SK하이닉스"
     # CORP_NAME = "CJ"
 
+    # result = get_latest_financial_informantion(CORP_NAME, test=True)
     result = get_latest_financial_informantion(CORP_NAME, test=True)
     print("result:", result)
     exit()
