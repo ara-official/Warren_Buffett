@@ -12,7 +12,8 @@ API_HOST = "https://opendart.fss.or.kr/api/"
 
 # 상장기업 재무정보
 
-DEBUG = True
+# DEBUG = True
+DEBUG = False
 
 def get_company_information(corp_name):
     corp_code = get_corp_code_by_corp_name(corp_name)
@@ -39,7 +40,7 @@ QUARTER = [
 ]
 
 def get_financial_information(corp_name, bsns_year=2020, reprt_code=None):
-    print(get_financial_information.__name__)
+    if DEBUG: print(get_financial_information.__name__)
 
     corp_code = get_corp_code_by_corp_name(corp_name)
     if corp_code == None:

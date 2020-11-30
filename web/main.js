@@ -1,7 +1,7 @@
 let gJsonData = null;
 let gFileList = "";
 let MAX_PER = Number(50);
-let TARGET_PER = Number(10);
+let TARGET_PER = Number(5);
 let WEIGHT = 1;
 let gCurrentFileName = "";
 let million = Number(100000000);
@@ -12,6 +12,11 @@ let jSelectPER = "#select_PER";
 let jSelectWEIGHT = "#select_WEIGHT";
 let jCheckNET_INCOME = "#check_NET_INCOME";
 let CHECK_NET_INCOME = true;
+let gLatestData = {
+    fileName: "",
+    list: '',
+    avgReturnRatio: 0,
+}
 
 // window.onload = function ()
 $(document).ready(function ()
@@ -106,6 +111,9 @@ function ajax_load_list()
             display_select_box(data)
 
             ajax_load_data(gFileList[gFileList.length - 2])
+            gLatestData.fileName = gFileList[gFileList.length - 2];
+
+            ajax_load_latest_data();
         },
         error: function(jqXHR, textStatus, errorThrown){console.log("jqXHR: " + jqXHR + ", textStatus: " + textStatus)}
     });
@@ -151,6 +159,41 @@ function ajax_load_data(file_name)
     });
 }
 
+function ajax_load_latest_data()
+{
+    $.ajax({
+        // url: 'file:///Users/sonminsik/Desktop/PROGRAMMING/Warren_Buffett/json/202010111651_NCAV.json',
+        // url: "http://127.0.0.1:8081/json/202010111651_NCAV.json",
+        // url: "../json/202010120158_NCAV.json",
+        // url: "../json/202010130035_NCAV.json",
+        url: "../json/" + gLatestData.fileName,
+        
+        type: "GET",
+        async: true,
+        cache: false,
+        // dataType: "json",
+        dataType: "text",
+        // dataType: "jsonp",
+        // crossDomain: true,
+    //     success: function(data){console.log(data)},
+    //     error: function(jqXHR, textStatus, errorThrown){console.log("jqXHR: " + jqXHR + ", textStatus: " + textStatus)}
+    })
+    .done(function(data){
+        // console.log("["+arguments.callee.name+"] START");
+        console.log("[ajax_load_latest_data: done] START");
+
+        let gJsonData = JSON.parse(data)
+
+        gLatestData.list = gJsonData["list"];
+
+        // console.log("["+arguments.callee.name+"] END");
+        console.log("[ajax_load_latest_data: done] END");
+    })
+    .fail(function(jqXHR, textStatus, errorThrown){
+        console.log("jqXHR: " + jqXHR + ", textStatus: " + textStatus)
+    });
+}
+
 function display_select_box(list)
 {
     gFileList = list.split("\n");
@@ -187,6 +230,8 @@ function display_json_data(json_data)
     let draw = "<tr>"
         +"<th>"+"index"+"</th>"
         +"<th>"+"종목명"+"</th>"
+        +"<th>"+"주가상승률"+"</th>"
+        +"<th>"+"오늘 종가"+"</th>"
         +"<th>"+"종가"+"</th>"
         // +"<th>"+"구매<br>여부"+"</th>"
         // +"<th>"+"(유동자산-부채총계)<br>:<br>(시가총액*가중치)"+"</th>"
@@ -194,13 +239,15 @@ function display_json_data(json_data)
         +"<th class=\"cal_title\">"+"유동자산"+"</th>"
         +"<th class=\"cal_title\">"+"부채총계"+"</th>"
         +"<th class=\"cal_title\">"+"시가총액"+"</th>"
-        +"<th class=\"cal_title\">"+"가<br>중<br>치"+"</th>"
-        +"<th class=\"cal_title\">"+"당기<br>순이익</th>"
+        // +"<th class=\"cal_title\">"+"가<br>중<br>치"+"</th>"
+        +"<th class=\"cal_title\">"+"가중치"+"</th>"
+        +"<th class=\"cal_title\">"+"당기순이익</th>"
         +"<th>"+"DIV"+"</th>"
         +"<th>"+"BPS"+"</th>"
         +"<th>"+"PER"+"</th>"
         +"<th>"+"EPS"+"</th>"
         +"<th>"+"PBR"+"</th>"
+        +"<th>"+"ROC"+"</th>"
     +"</tr>"
 
     $("#main_table").append("<thead>");
@@ -208,6 +255,8 @@ function display_json_data(json_data)
     $("#main_table").append("<thead>");
 
     let count = 0;
+    let sumCount = 0;
+    let sumOfReturnRatio = 0;
 
     $("#main_table").append("<tbody>");
     for(let i = 0; i < list.length; i++)
@@ -234,10 +283,33 @@ function display_json_data(json_data)
                 continue
             }
 
+            // 계산
+            let ROC = Number(list[i]["영업이익"]) / (Number(list[i]["비유동자산"]) + Number(list[i]["유동자산"]) - Number(list[i]["유동부채"]));
+
+            let today_close_value = 0;
+            for(let nIdx = 0; nIdx < gLatestData.list.length; nIdx++)
+            {
+                if (list[i]["종목명"] === gLatestData.list[nIdx]["종목명"])
+                {
+                    today_close_value = gLatestData.list[nIdx]["종가"];
+                    break;
+                }
+            }
+
             count++;
+            let sumOfReturn = 0;
+            if (Number(today_close_value) != 0)
+            {
+                sumOfReturn = (Number(today_close_value) / Number(list[i]["종가"]) * 100 - 100);
+                sumOfReturnRatio += sumOfReturn;
+                sumCount++;
+            }
+
             let draw = "<tr>"
                 +"<td class=\"index\">["+count+"] "+i+"/"+list.length+"</td>"
                 +"<td class=\"stock_name\">"+list[i]["종목명"]+"</td>"
+                +"<td class=\"stock_name\">"+sumOfReturn.toLocaleString()+"%</td>"
+                +"<td class=\"close_value\">"+Number(today_close_value).toLocaleString()+"</td>"
                 +"<td class=\"close_value\">"+Number(list[i]["종가"]).toLocaleString()+"</td>"
                 // +"<td class=\"buy_or_not\">"+list[i]["구매여부"]+"</td>"
                 +"<td class=\"calculation\">"+Number(cal).toFixed(2)+"</td>"
@@ -246,17 +318,22 @@ function display_json_data(json_data)
                 +"<td class=\"cal_val\">"+(Number(list[i]["시가총액"]) / million).toFixed(0).toLocaleString()+" 억</td>"
                 // +"<td class=\"weight\">"+list[i]["가중치"]+"</td>"
                 +"<td class=\"weight\">"+WEIGHT+"</td>"
-                +"<td class=\"net_income\">"+(Number(list[i]["당기순이익"]) / million).toFixed(0).toLocaleString()+"억</td>"
+                +"<td class=\"net_income\">"+(Number(list[i]["당기순이익"]) / million).toFixed(0).toLocaleString()+"억 (" + (Number(list[i]["당기순이익"])/Number(list[i]["유동자산"]) * 100).toFixed(2) + "%)</td>"
                 +"<td class=\"div\">"+list[i]["DIV"]+"</td>"
                 +"<td class=\"bps\">"+list[i]["BPS"]+"</td>"
                 +"<td class=\"per\">"+list[i]["PER"]+"</td>"
                 +"<td class=\"eps\">"+list[i]["EPS"]+"</td>"
                 +"<td class=\"pbr\">"+Number(list[i]["PBR"]).toFixed(3)+"</td>"
+                +"<td class=\"roc\">"+Number(ROC * 100).toFixed(2)+"%</td>"
             +"</tr>"
 
             $("#main_table").append(draw);
         }
     }
+
+    gLatestData.avgReturnRatio = Number(sumOfReturnRatio / sumCount).toFixed(2);
+    $("#expectedReturn_label").text(gLatestData.avgReturnRatio);
+    $("#expectedStock_label").text(sumCount);
     $("#main_table").append("</tbody>");
     if (DEBUG === true) console.log("["+arguments.callee.name+"] END");
 }

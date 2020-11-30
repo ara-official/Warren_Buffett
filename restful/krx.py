@@ -10,6 +10,7 @@ import requests
 from restful.parse_xml import get_corp_code_by_corp_name
 
 DEBUG = True
+RETRY_COUNT = 100
 
 from pykrx import stock
 import datetime
@@ -22,12 +23,17 @@ def test():
 
     return tickers
 
-def get_latest_market_ohlcv(market=""):
-    retry_count = 10
-    today = datetime.datetime.today().strftime("%Y%m%d")
+def get_latest_market_ohlcv(today=None, market=""):
+    
+    if today == None:
+        today = datetime.datetime.today().strftime("%Y%m%d")
 
-    for i in range(0, retry_count):
-        latest_date = str(int(today) - i)
+    if DEBUG == True: print(get_latest_market_ohlcv.__name__, today)
+
+    today_datetime = datetime.datetime.strptime(today, "%Y%m%d")
+    for i in range(0, RETRY_COUNT):
+        
+        latest_date = (today_datetime - datetime.timedelta(i)).strftime("%Y%m%d")
         if DEBUG: print(latest_date)
         result = stock.get_market_ohlcv_by_ticker(latest_date, market)
         if result.empty == False:
@@ -57,11 +63,17 @@ def test_latest_market_ohlcv():
         if loop > loop_count:
             break
 
-def get_lastest_market_fundamental():
-    retry_count = 10
-    today = datetime.datetime.today().strftime("%Y%m%d")
-    for i in range(0, retry_count):
-        latest_date = str(int(today) - i)
+def get_lastest_market_fundamental(today=None):
+    if today == None:
+        today = datetime.datetime.today().strftime("%Y%m%d")
+
+    if DEBUG == True:
+        print(get_lastest_market_fundamental.__name__, today)
+
+    today_datetime = datetime.datetime.strptime(today, "%Y%m%d")
+
+    for i in range(0, RETRY_COUNT):
+        latest_date = (today_datetime - datetime.timedelta(i)).strftime("%Y%m%d")
         if DEBUG: print(latest_date)
         result = stock.get_market_fundamental_by_ticker(latest_date)
         if result.empty == False:

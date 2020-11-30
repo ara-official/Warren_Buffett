@@ -1,4 +1,5 @@
 # [종목 조회 속도 개선] CREON 대신에, krx 와 opendart 를 통해 필요한 값 가져오도록 수정
+# NOTE: 화면 보호 모드 될 때, opendart 접속 끊기는 현상 존재.
 
 # 그레이엄의 마지막 선물
 from data_process import data_handler, file_inout
@@ -13,16 +14,21 @@ import time
 
 DEBUG = False
 
-def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리스트=None): # TODO: BPS 고려
-    print(NCAV.__name__)
-    # [1] get raw date
-    df_latest_market_ohlcv = get_latest_market_ohlcv() # all market
+# 함수이름은 NCAV 이지만, 실제 동작은 오늘 기준 해당 종목의 재무 데이터 뽑아오는 것이다.
+def latest_NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리스트=None, 당기순이익_리스트=None, 영업이익_리스트=None, today=None): # TODO: BPS 고려
+    print(latest_NCAV.__name__)
+    if today == None:
+        today = datetime.datetime.today().strftime("%Y%m%d")
+
+    print("[0] data: " + today)
+    print("[1] get raw date - ohlcv")
+    df_latest_market_ohlcv = get_latest_market_ohlcv(today) # all market
     # df_latest_market_ohlcv = get_latest_market_ohlcv(market="KOSPI")
     # df_latest_market_ohlcv = get_latest_market_ohlcv(market="KOSDAQ")
     # df_latest_market_ohlcv = get_latest_market_ohlcv(market="KONEX")
 
-    # DIV/BPS/PER/EPS/PBR
-    df_lastest_market_fundamental = get_lastest_market_fundamental()
+    print("[2] get raw date - DIV/BPS/PER/EPS/PBR")
+    df_lastest_market_fundamental = get_lastest_market_fundamental(today)
 
     # [2] get result
     loop = 0
@@ -30,10 +36,12 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
     print("[종목수]", len(df_latest_market_ohlcv.index), "(df_latest_market_ohlcv)")
     print("[종목수]", len(df_lastest_market_fundamental.index), "(df_lastest_market_fundamental)")
 
-    if DEBUG: exit() # for test
+    # print(df_latest_market_ohlcv)
+    # print(df_lastest_market_fundamental)
+    # if DEBUG: exit() # for test
 
     # output
-    date = datetime.datetime.today().strftime("%Y%m%d%H%M")
+    date = today + datetime.datetime.today().strftime("%H%M")
     output_file_name = date + "_NCAV.txt"
     path='./output/%s' % (output_file_name)
     file_inout.write_to_file(path=path, data="", option='w')
@@ -42,7 +50,8 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
     json_dict["date"] = date
     json_dict["list"] = []
     for index in df_latest_market_ohlcv.index:
-        time.sleep(0.01)
+        if (유동자산_리스트 == None) or (부채총계_리스트 == None) or (당기순이익_리스트 == None) or (영업이익_리스트 == None): # NOTE: 현재는 이미 저장되어 있는 값 사용함.
+            time.sleep(0.01)
 
         # print(df_latest_market_ohlcv.loc[index])
         종목명 = df_latest_market_ohlcv.loc[index][df_latest_market_ohlcv.columns[0]]
@@ -57,6 +66,8 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
         기업정보 = None
         유동자산 = None # 0
         부채총계 = None # 5
+        당기순이익 = None
+        영업이익 = None
 
         # get_latest_financial_informantion 사용할 경우 유효
         # 비유동자산 = None # 1
@@ -71,7 +82,7 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
         # 법인세차감전_순이익 = None # 11
         # 당기순이익 = None # 12
         dic_info = {}
-        if (유동자산_리스트 == None) or (부채총계_리스트 == None): # NOTE: 현재는 이미 저장되어 있는 값 사용함.
+        if (유동자산_리스트 == None) or (부채총계_리스트 == None) or (당기순이익_리스트 == None) or (영업이익_리스트 == None): # NOTE: 현재는 이미 저장되어 있는 값 사용함.
             기업정보 = get_latest_financial_informantion(corp_name=종목명) # <- 요 함수 개선 필요: data set 을 통으로 가져와서, 종목명으로 검색하도록 해야겠다..
             if 기업정보 == None:
                 continue
@@ -95,15 +106,33 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
                 부채총계 = 부채총계_리스트[종목명]
             except KeyError:
                 부채총계 = 0
+            try:
+                당기순이익 = 당기순이익_리스트[종목명]
+            except KeyError:
+                당기순이익 = 0
 
-            dic_info["유동자산"] = 유동자산
-            dic_info["부채총계"] = 부채총계
+            try:
+                영업이익 = 영업이익_리스트[종목명]
+            except KeyError:
+                영업이익 = 0
 
         # exception case
-        if (유동자산 == "-") or (유동자산 == ""):
+        if (유동자산 == "-") or (유동자산 == "") or (유동자산 == "\n"):
             continue
-        if (부채총계 == "-") or (부채총계 == ""):
+        if (부채총계 == "-") or (부채총계 == "") or (부채총계 == "\n"):
             continue
+        if (당기순이익 == "-") or (당기순이익 == "") or (당기순이익 == "\n"):
+            continue
+        if (영업이익 == "-") or (영업이익 == "") or (영업이익 == "\n"):
+            continue
+
+        # TODO: 당기순이익 등의 정보 필요함. 자본변동표 활용
+        dic_info["유동자산"] = 유동자산
+        dic_info["부채총계"] = 부채총계
+        dic_info["당기순이익"] = 당기순이익
+        dic_info["영업이익"] = 영업이익
+
+
 
         DIV=None
         BPS=None
@@ -118,6 +147,9 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
                 PER = df_lastest_market_fundamental.loc[index_2][df_lastest_market_fundamental.columns[3]]
                 EPS = df_lastest_market_fundamental.loc[index_2][df_lastest_market_fundamental.columns[4]]
                 PBR = df_lastest_market_fundamental.loc[index_2][df_lastest_market_fundamental.columns[5]]
+                
+                # 검색한 행 삭제
+                df_lastest_market_fundamental = df_lastest_market_fundamental.drop(index_2)
                 break
 
         구매여부 = (int(유동자산) - int(부채총계)) > int(시가총액) * weight
@@ -138,7 +170,7 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
                 "EPS": str(EPS),
                 "PBR": str(PBR)
                 }
-            output_json.update(dic_info)
+            output_json.update(dic_info) # 합치기
             json_dict["list"].append(output_json)
 
         # for test
@@ -154,7 +186,6 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
     
 
     if dump_json == True:
-        date = datetime.datetime.today().strftime("%Y%m%d%H%M")
         output_json_file_name = date + "_NCAV.json"
         path='./json/%s' % (output_json_file_name)
         # json = {"date":date, "list":json_list}
@@ -164,10 +195,39 @@ def NCAV(dump_json=True, weight=1, 유동자산_리스트=None, 부채총계_리
         file_inout.write_to_file(path="./json/list.txt", data=output_json_file_name, option='a')
 
 if __name__ == "__main__":
-    YEAR = "2020"
-    MONTH = 10
-    PRINT = False
-    유동자산_리스트, 부채총계_리스트 = data_handler.get_유동자산_리스트(year=YEAR, month=MONTH, bPrint=PRINT)
+    # today = datetime.datetime.today()
+    today = datetime.datetime.strptime("20200106", "%Y%m%d")
 
-    # NCAV(dump_json=True, 유동자산_리스트=유동자산_리스트, 부채총계_리스트=부채총계_리스트)
-    NCAV(dump_json=True, 유동자산_리스트=None, 부채총계_리스트=None)
+    YEAR = today.strftime("%Y")
+    MONTH = today.strftime("%m")
+    DAY = today.strftime("%d")
+    date = today.strftime("%Y%m%d")
+    print(YEAR, MONTH, DAY)
+    today = today - datetime.timedelta(3)
+
+    for i in range(101):
+        search_day = today + datetime.timedelta(i*7)
+        YEAR = search_day.strftime("%Y")
+        MONTH = search_day.strftime("%m")
+        DAY = search_day.strftime("%d")
+        YDM = search_day.strftime("%Y%m%d")
+        print(search_day, YDM)
+
+        # weekday = search_day.weekday()
+        # if (weekday == 5) or (weekday == 6):
+        #     continue
+
+        PRINT = False
+        유동자산_리스트, 부채총계_리스트 = data_handler.get_유동자산_리스트(year=YEAR, month=MONTH, bPrint=PRINT)
+        당기순이익_리스트 = data_handler.get_당기순이익_리스트(year=YEAR, month=MONTH)
+        영업이익_리스트 = data_handler.get_영업이익(year=YEAR, month=MONTH)
+
+        skip = (유동자산_리스트 == None) | (부채총계_리스트 == None) | (당기순이익_리스트 == None) | (영업이익_리스트 == None)
+        if skip == True:
+            continue
+
+        latest_NCAV(dump_json=True, 유동자산_리스트=유동자산_리스트, 부채총계_리스트=부채총계_리스트, 당기순이익_리스트=당기순이익_리스트, 영업이익_리스트=영업이익_리스트, today=YDM)
+
+
+    # latest_NCAV(dump_json=True, 유동자산_리스트=None, 부채총계_리스트=None, 당기순이익_리스트=None, 영업이익_리스트=None)
+    # latest_NCAV(dump_json=True, 유동자산_리스트=유동자산_리스트, 부채총계_리스트=부채총계_리스트, 당기순이익_리스트=당기순이익_리스트, 영업이익_리스트=영업이익_리스트, today="20201130")
