@@ -23,7 +23,7 @@ def test():
 
     return tickers
 
-def get_latest_market_ohlcv(today=None, market=""):
+def get_latest_market_ohlcv(today=None, market="ALL"):
     
     if today == None:
         today = datetime.datetime.today().strftime("%Y%m%d")
@@ -32,7 +32,6 @@ def get_latest_market_ohlcv(today=None, market=""):
 
     today_datetime = datetime.datetime.strptime(today, "%Y%m%d")
     for i in range(0, RETRY_COUNT):
-        
         latest_date = (today_datetime - datetime.timedelta(i)).strftime("%Y%m%d")
         if DEBUG: print(latest_date)
         result = stock.get_market_ohlcv_by_ticker(latest_date, market)
@@ -40,6 +39,22 @@ def get_latest_market_ohlcv(today=None, market=""):
             return result
 
     if DEBUG: print("fail")
+    return None
+def get_latest_market_cap(today=None, market="ALL"):
+    if today == None:
+        today = datetime.datetime.today().strftime("%Y%m%d")
+
+    if DEBUG == True: print(get_latest_market_ohlcv.__name__, today)
+
+    today_datetime = datetime.datetime.strptime(today, "%Y%m%d")
+    for i in range(0, RETRY_COUNT):
+
+        latest_date = (today_datetime - datetime.timedelta(i)).strftime("%Y%m%d")
+        if DEBUG: print(latest_date)
+        result = stock.get_market_cap_by_ticker(latest_date, market)
+        if result.empty == False:
+            return result
+
     return None
 
 def test_latest_market_ohlcv():

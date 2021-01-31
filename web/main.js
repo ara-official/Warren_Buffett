@@ -16,6 +16,7 @@ let gLatestData = {
     fileName: "",
     list: '',
     avgReturnRatio: 0,
+    type: ''
 }
 
 // window.onload = function ()
@@ -184,7 +185,17 @@ function ajax_load_latest_data()
 
         let gJsonData = JSON.parse(data)
 
-        gLatestData.list = gJsonData["list"];
+        if (gJsonData["list"] === undefined)
+        {
+            gLatestData.list = gJsonData["data"];
+            console.log(gLatestData);
+            gLatestData.type = "dic"
+        }
+        else
+        {
+            gLatestData.list = gJsonData["list"];
+            gLatestData.type = "list"
+        }
 
         // console.log("["+arguments.callee.name+"] END");
         console.log("[ajax_load_latest_data: done] END");
@@ -197,7 +208,7 @@ function ajax_load_latest_data()
 function display_select_box(list)
 {
     gFileList = list.split("\n");
-
+    // console.log(gFileList)
     for (let i = gFileList.length - 2; i >= 0; i--) // NOTE: 0 제외
     {
         let draw = "<option value=\"" + gFileList[i] + "\">" + gFileList[i] + "</option>";
@@ -226,12 +237,11 @@ function display_json_data(json_data)
 
     if (DEBUG === true) console.log("["+arguments.callee.name+"] START");
     
-    let list = json_data["list"];
     let draw = "<tr>"
         +"<th>"+"index"+"</th>"
         +"<th>"+"종목명"+"</th>"
         +"<th>"+"주가상승률"+"</th>"
-        +"<th>"+"오늘 종가"+"</th>"
+        // +"<th>"+"오늘 종가"+"</th>"
         +"<th>"+"종가"+"</th>"
         // +"<th>"+"구매<br>여부"+"</th>"
         // +"<th>"+"(유동자산-부채총계)<br>:<br>(시가총액*가중치)"+"</th>"
@@ -239,6 +249,7 @@ function display_json_data(json_data)
         +"<th class=\"cal_title\">"+"유동자산"+"</th>"
         +"<th class=\"cal_title\">"+"부채총계"+"</th>"
         +"<th class=\"cal_title\">"+"시가총액"+"</th>"
+        +"<th>"+"오늘 시가총액"+"</th>"
         // +"<th class=\"cal_title\">"+"가<br>중<br>치"+"</th>"
         +"<th class=\"cal_title\">"+"가중치"+"</th>"
         +"<th class=\"cal_title\">"+"당기순이익</th>"
@@ -254,80 +265,226 @@ function display_json_data(json_data)
     $("#main_table").append(draw);
     $("#main_table").append("<thead>");
 
+    let list = json_data["list"];
+    let type = "list";
+    // console.log(list)
+    if (list === undefined)
+    {
+        type = "dic";
+        list = json_data["data"]; // dictionary
+        // console.log(list[0]);
+        // // console.log(list)
+        // for(let key in list)
+        // {
+        //     if (list.hasOwnProperty(key)) {    
+        //         console.log(key, list[key]);
+        //     }
+        // }
+    }
+
     let count = 0;
     let sumCount = 0;
     let sumOfReturnRatio = 0;
 
     $("#main_table").append("<tbody>");
-    for(let i = 0; i < list.length; i++)
+    if (type === "list")
     {
-        let display = true;
-
-        // display = (list[i]["구매여부"] === "True");
-        display &= ((Number(list[i]["PER"]) > Number(0)) && (Number(list[i]["PER"]) <= Number(TARGET_PER)));
-        if (DEBUG === true) console.log("TARGET_PER: " + TARGET_PER + ", display: " + display)
-        display |= (list[i]["PER"] === undefined);
-        if (CHECK_NET_INCOME === true)
+        for(let i = 0; i < list.length; i++)
         {
-            display &= (Number(list[i]["당기순이익"]) >= 0);
-        }
-        if (DEBUG === true) console.log("CHECK_NET_INCOME: " + CHECK_NET_INCOME + ", display: " + display)
+            let display = true;
 
-        if (Boolean(display) === true) // radio button
-        {
-            // let cal = (list[i]["유동자산"]-list[i]["부채총계"])/(list[i]["시가총액"]*list[i]["가중치"]);
-            let cal = (list[i]["유동자산"]-list[i]["부채총계"])/(list[i]["시가총액"]*WEIGHT);
-            if (Number(cal) < Number(1))
+            // display = (list[i]["구매여부"] === "True");
+            display &= ((Number(list[i]["PER"]) > Number(0)) && (Number(list[i]["PER"]) <= Number(TARGET_PER)));
+            if (DEBUG === true) console.log("TARGET_PER: " + TARGET_PER + ", display: " + display)
+            display |= (list[i]["PER"] === undefined);
+            if (CHECK_NET_INCOME === true)
             {
-                if(DEBUG === true) console.log("cal: " + cal);
-                continue
+                display &= (Number(list[i]["당기순이익"]) >= 0);
+            }
+            if (DEBUG === true) console.log("CHECK_NET_INCOME: " + CHECK_NET_INCOME + ", display: " + display)
+
+            if (isNaN(list[i]["시가총액"]))
+            {
+                display = false;
+            }
+            if (isNaN(list[i]["유동자산"]))
+            {
+                display = false;
             }
 
-            // 계산
-            let ROC = Number(list[i]["영업이익"]) / (Number(list[i]["비유동자산"]) + Number(list[i]["유동자산"]) - Number(list[i]["유동부채"]));
-
-            let today_close_value = 0;
-            for(let nIdx = 0; nIdx < gLatestData.list.length; nIdx++)
+            if (Boolean(display) === true) // radio button
             {
-                if (list[i]["종목명"] === gLatestData.list[nIdx]["종목명"])
+                // let cal = (list[i]["유동자산"]-list[i]["부채총계"])/(list[i]["시가총액"]*list[i]["가중치"]);
+                let cal = (list[i]["유동자산"]-list[i]["부채총계"])/(list[i]["시가총액"]*WEIGHT);
+                if (Number(cal) < Number(1))
                 {
-                    today_close_value = gLatestData.list[nIdx]["종가"];
-                    break;
+                    if(DEBUG === true) console.log("cal: " + cal);
+                    continue
                 }
-            }
 
-            count++;
-            let sumOfReturn = 0;
-            if (Number(today_close_value) != 0)
+                // 계산
+                let ROC = Number(list[i]["영업이익"]) / (Number(list[i]["비유동자산"]) + Number(list[i]["유동자산"]) - Number(list[i]["유동부채"]));
+
+                let today_market_capital = 0;
+                if (gLatestData.type === "dic")
+                {
+                    for(let nIdx in gLatestData.list)
+                    {
+                        if (list[i]["종목명"] === gLatestData.list[nIdx]["종목명"])
+                        {
+                            today_market_capital = gLatestData.list[nIdx]["시가총액"];
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for(let nIdx = 0; nIdx < gLatestData.list.length; nIdx++)
+                    {
+                        if (list[i]["종목명"] === gLatestData.list[nIdx]["종목명"])
+                        {
+                            today_market_capital = gLatestData.list[nIdx]["시가총액"];
+                            break;
+                        }
+                    }
+                }
+
+
+                count++;
+                let sumOfReturn = 0;
+                if (Number(today_market_capital) != 0)
+                {
+                    // sumOfReturn = (Number(today_market_capital) / Number(list[i]["종가"]) * 100 - 100);
+                    sumOfReturn = (Number(today_market_capital) / Number(list[i]["시가총액"]) * 100 - 100);
+                    sumOfReturnRatio += sumOfReturn;
+                    sumCount++;
+                }
+
+                let draw = "<tr>"
+                    +"<td class=\"index\">["+count+"] "+i+"/"+list.length+"</td>"
+                    +"<td class=\"stock_name\">"+list[i]["종목명"]+"</td>"
+                    +"<td class=\"stock_name\">"+sumOfReturn.toLocaleString()+"%</td>"
+                    +"<td class=\"close_value\">"+Number(list[i]["종가"]).toLocaleString()+"</td>"
+                    // +"<td class=\"buy_or_not\">"+list[i]["구매여부"]+"</td>"
+                    +"<td class=\"calculation\">"+Number(cal).toFixed(2)+"</td>"
+                    +"<td class=\"cal_val\">"+(Number(list[i]["유동자산"]) / million).toFixed(0).toLocaleString()+" 억</td>"
+                    +"<td class=\"cal_val\">"+(Number(list[i]["부채총계"]) / million).toFixed(0).toLocaleString()+" 억</td>"
+                    +"<td class=\"cal_val\">"+(Number(list[i]["시가총액"]) / million).toFixed(0).toLocaleString()+" 억</td>"
+                    +"<td class=\"close_value\">"+Number(today_market_capital / million).toFixed(0).toLocaleString()+" 억</td>"
+                    // +"<td class=\"weight\">"+list[i]["가중치"]+"</td>"
+                    +"<td class=\"weight\">"+WEIGHT+"</td>"
+                    +"<td class=\"net_income\">"+(Number(list[i]["당기순이익"]) / million).toFixed(0).toLocaleString()+"억 (" + (Number(list[i]["당기순이익"])/Number(list[i]["유동자산"]) * 100).toFixed(2) + "%)</td>"
+                    +"<td class=\"div\">"+list[i]["DIV"]+"</td>"
+                    +"<td class=\"bps\">"+list[i]["BPS"]+"</td>"
+                    +"<td class=\"per\">"+list[i]["PER"]+"</td>"
+                    +"<td class=\"eps\">"+list[i]["EPS"]+"</td>"
+                    +"<td class=\"pbr\">"+Number(list[i]["PBR"]).toFixed(3)+"</td>"
+                    +"<td class=\"roc\">"+Number(ROC * 100).toFixed(2)+"%</td>"
+                +"</tr>"
+
+                $("#main_table").append(draw);
+            }
+        }
+    }
+    else if (type === "dic")
+    {
+        let stockIdx = 0;
+        for(let i in list)
+        {
+            let display = true;
+
+            // display = (list[i]["구매여부"] === "True");
+            display &= ((Number(list[i]["PER"]) > Number(0)) && (Number(list[i]["PER"]) <= Number(TARGET_PER)));
+            if (DEBUG === true) console.log("TARGET_PER: " + TARGET_PER + ", display: " + display)
+            // display |= (list[i]["PER"] === undefined);
+            if (CHECK_NET_INCOME === true)
             {
-                sumOfReturn = (Number(today_close_value) / Number(list[i]["종가"]) * 100 - 100);
-                sumOfReturnRatio += sumOfReturn;
-                sumCount++;
+                display &= (Number(list[i]["당기순이익"]) > 0);
+            }
+            if (DEBUG === true) console.log("CHECK_NET_INCOME: " + CHECK_NET_INCOME + ", display: " + display)
+
+            if (isNaN(list[i]["시가총액"]))
+            {
+                display = false;
+            }
+            if (isNaN(list[i]["유동자산"]))
+            {
+                display = false;
             }
 
-            let draw = "<tr>"
-                +"<td class=\"index\">["+count+"] "+i+"/"+list.length+"</td>"
-                +"<td class=\"stock_name\">"+list[i]["종목명"]+"</td>"
-                +"<td class=\"stock_name\">"+sumOfReturn.toLocaleString()+"%</td>"
-                +"<td class=\"close_value\">"+Number(today_close_value).toLocaleString()+"</td>"
-                +"<td class=\"close_value\">"+Number(list[i]["종가"]).toLocaleString()+"</td>"
-                // +"<td class=\"buy_or_not\">"+list[i]["구매여부"]+"</td>"
-                +"<td class=\"calculation\">"+Number(cal).toFixed(2)+"</td>"
-                +"<td class=\"cal_val\">"+(Number(list[i]["유동자산"]) / million).toFixed(0).toLocaleString()+" 억</td>"
-                +"<td class=\"cal_val\">"+(Number(list[i]["부채총계"]) / million).toFixed(0).toLocaleString()+" 억</td>"
-                +"<td class=\"cal_val\">"+(Number(list[i]["시가총액"]) / million).toFixed(0).toLocaleString()+" 억</td>"
-                // +"<td class=\"weight\">"+list[i]["가중치"]+"</td>"
-                +"<td class=\"weight\">"+WEIGHT+"</td>"
-                +"<td class=\"net_income\">"+(Number(list[i]["당기순이익"]) / million).toFixed(0).toLocaleString()+"억 (" + (Number(list[i]["당기순이익"])/Number(list[i]["유동자산"]) * 100).toFixed(2) + "%)</td>"
-                +"<td class=\"div\">"+list[i]["DIV"]+"</td>"
-                +"<td class=\"bps\">"+list[i]["BPS"]+"</td>"
-                +"<td class=\"per\">"+list[i]["PER"]+"</td>"
-                +"<td class=\"eps\">"+list[i]["EPS"]+"</td>"
-                +"<td class=\"pbr\">"+Number(list[i]["PBR"]).toFixed(3)+"</td>"
-                +"<td class=\"roc\">"+Number(ROC * 100).toFixed(2)+"%</td>"
-            +"</tr>"
+            if (Boolean(display) === true) // radio button
+            {
+                // let cal = (list[i]["유동자산"]-list[i]["부채총계"])/(list[i]["시가총액"]*list[i]["가중치"]);
+                let cal = (list[i]["유동자산"]-list[i]["부채총계"])/(list[i]["시가총액"]*WEIGHT);
+                if (Number(cal) < Number(1))
+                {
+                    if(DEBUG === true) console.log("cal: " + cal);
+                    continue
+                }
 
-            $("#main_table").append(draw);
+                // 계산
+                let ROC = Number(list[i]["영업이익"]) / (Number(list[i]["비유동자산"]) + Number(list[i]["유동자산"]) - Number(list[i]["유동부채"]));
+
+                let today_market_capital = 0;
+                console.log("gLatestData.list.length", gLatestData.list.length);
+                if (gLatestData.type === "dic")
+                {
+                    for(let nIdx in gLatestData.list)
+                    {
+                        if (i === gLatestData.list[nIdx]["종목명"])
+                        {
+                            today_market_capital = gLatestData.list[nIdx]["시가총액"];
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for(let nIdx = 0; nIdx < gLatestData.list.length; nIdx++)
+                    {
+                        if (i === gLatestData.list[nIdx]["종목명"])
+                        {
+                            today_market_capital = gLatestData.list[nIdx]["시가총액"];
+                            break;
+                        }
+                    }
+                }
+
+                count++;
+                let sumOfReturn = 0;
+                if (Number(today_market_capital) != 0)
+                {
+                    // sumOfReturn = (Number(today_market_capital) / Number(list[i]["종가"]) * 100 - 100);
+                    sumOfReturn = (Number(today_market_capital) / Number(list[i]["시가총액"]) * 100 - 100);
+                    sumOfReturnRatio += sumOfReturn;
+                    sumCount++;
+                }
+
+                let draw = "<tr>"
+                    +"<td class=\"index\">["+count+"] "+stockIdx+"/"+Object.keys(list).length+"</td>"
+                    +"<td class=\"stock_name\">"+i+"</td>"
+                    +"<td class=\"stock_name\">"+sumOfReturn.toLocaleString()+"%</td>"
+                    +"<td class=\"close_value\">"+Number(list[i]["종가"]).toLocaleString()+"</td>"
+                    // +"<td class=\"buy_or_not\">"+list[i]["구매여부"]+"</td>"
+                    +"<td class=\"calculation\">"+Number(cal).toFixed(2)+"</td>"
+                    +"<td class=\"cal_val\">"+(Number(list[i]["유동자산"]) / million).toFixed(0).toLocaleString()+" 억</td>"
+                    +"<td class=\"cal_val\">"+(Number(list[i]["부채총계"]) / million).toFixed(0).toLocaleString()+" 억</td>"
+                    +"<td class=\"cal_val\">"+(Number(list[i]["시가총액"]) / million).toFixed(0).toLocaleString()+" 억</td>"
+                    +"<td class=\"close_value\">"+Number(today_market_capital / million).toFixed(0).toLocaleString()+" 억</td>"
+                    // +"<td class=\"weight\">"+list[i]["가중치"]+"</td>"
+                    +"<td class=\"weight\">"+WEIGHT+"</td>"
+                    +"<td class=\"net_income\">"+(Number(list[i]["당기순이익"]) / million).toFixed(0).toLocaleString()+"억 (" + (Number(list[i]["당기순이익"])/Number(list[i]["유동자산"]) * 100).toFixed(2) + "%)</td>"
+                    +"<td class=\"div\">"+list[i]["DIV"]+"</td>"
+                    +"<td class=\"bps\">"+list[i]["BPS"]+"</td>"
+                    +"<td class=\"per\">"+list[i]["PER"]+"</td>"
+                    +"<td class=\"eps\">"+list[i]["EPS"]+"</td>"
+                    +"<td class=\"pbr\">"+Number(list[i]["PBR"]).toFixed(3)+"</td>"
+                    +"<td class=\"roc\">"+Number(ROC * 100).toFixed(2)+"%</td>"
+                +"</tr>"
+
+                $("#main_table").append(draw);
+                stockIdx = stockIdx + 1;
+            }
         }
     }
 
